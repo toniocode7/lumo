@@ -119,7 +119,7 @@ export function Home() {
             {xpInLevel} / {xpToNext} XP
           </span>
         </div>
-        <ProgressBar value={xpInLevel} max={xpToNext} label="Progression du niveau" />
+        <ProgressBar value={xpInLevel} max={xpToNext} cycle={level} label="Progression du niveau" />
       </Card>
 
       {streak.atRisk && (

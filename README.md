@@ -20,7 +20,7 @@ npm test   # règles du jeu et sauvegarde
 - [x] 5. Expéditions
 - [x] 6. Série, joker et conséquence douce
 - [x] 7. Nid et boutique
-- [ ] 8. Le « jus »
+- [x] 8. Le « jus »
 - [ ] 9. PWA et mise en ligne
 
 Le design system est visible dans l'appli : Profil > Design system.

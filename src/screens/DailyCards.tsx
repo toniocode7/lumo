@@ -4,6 +4,7 @@ import { Button, Card, CategoryTag, RarityChip, ScreenHeader } from '../componen
 import { ALL_DONE_BONUS, CARDS_PER_DAY, cardReward } from '../game/cards'
 import { getChallenge } from '../game/challenges'
 import { getItem } from '../game/items'
+import { burstFrom, cssVar, floatText } from '../fx/particles'
 import { useGame } from '../game/store'
 import type { DailyCard } from '../game/types'
 import './DailyCards.css'
@@ -68,7 +69,18 @@ function FlipCard({ card, index }: { card: DailyCard; index: number }) {
                     <Icon name="repeat" size={18} />
                   </button>
                 )}
-                <Button onClick={() => completeCard(index)} tabIndex={card.revealed ? 0 : -1}>
+                <Button
+                  onClick={(e) => {
+                    const color = cssVar(`--rarity-${card.rarity}`)
+                    burstFrom(e.currentTarget, [color, cssVar('--gold'), '#ffffff'], {
+                      count: card.rarity === 'legendary' ? 60 : card.rarity === 'rare' ? 36 : 24,
+                      power: card.rarity === 'legendary' ? 1.4 : 1,
+                    })
+                    floatText(e.currentTarget, `+${r.xp} XP`, 'var(--gold-text)')
+                    completeCard(index)
+                  }}
+                  tabIndex={card.revealed ? 0 : -1}
+                >
                   C’est fait
                 </Button>
               </div>

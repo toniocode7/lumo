@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Card, ScreenHeader, categoryLabel } from '../components/ui'
@@ -9,12 +9,19 @@ import { dayKey } from '../game/rules'
 import { addDays } from '../game/streak'
 import type { Category } from '../game/types'
 import { useThemeContext } from '../themeContext'
+import { setSoundEnabled, sfx, soundEnabled } from '../fx/sound'
 import './screens.css'
 
 const categories: Category[] = ['body', 'mind', 'create', 'order']
 
 export function Profile() {
   const { theme, setTheme } = useThemeContext()
+  const [sound, setSound] = useState(soundEnabled)
+  const toggleSound = (on: boolean) => {
+    setSoundEnabled(on)
+    setSound(on)
+    if (on) sfx.check()
+  }
   const { state, streak } = useGame()
   const { player, creature } = state
   const today = dayKey()
@@ -166,6 +173,22 @@ export function Profile() {
             </button>
             <button aria-pressed={theme === 'light'} onClick={() => setTheme('light')}>
               <Icon name="sun" size={16} /> Clair
+            </button>
+          </div>
+        </div>
+        <div className="setting">
+          <div>
+            <strong>Sons</strong>
+            <p className="muted" style={{ fontSize: 14 }}>
+              Petits sons discrets quand tu valides.
+            </p>
+          </div>
+          <div className="segmented" role="group" aria-label="Sons">
+            <button aria-pressed={sound} onClick={() => toggleSound(true)}>
+              Activés
+            </button>
+            <button aria-pressed={!sound} onClick={() => toggleSound(false)}>
+              Coupés
             </button>
           </div>
         </div>

@@ -18,6 +18,7 @@ import { initialState, reducer, type Action, type NewTask } from './reducer'
 import { REWARDS, dayKey, levelFromXp } from './rules'
 import { loadState, saveState } from './storage'
 import { streakInfo, type StreakInfo } from './streak'
+import { sfx } from '../fx/sound'
 import type { Category, GameState, Stage } from './types'
 
 export type Form = { stage: Stage; branch: Category | null }
@@ -130,6 +131,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       action: Action,
       message: (after: GameState) => { text: string; important?: boolean },
       tone: Toast['tone'] = 'accent',
+      sound: 'check' | 'card' = 'check',
     ) => {
       const before = stateRef.current
       const after = reducer(before, action)
@@ -147,6 +149,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const m = woke
         ? { text: 'Ton compagnon se réveille, la brume se lève. Content de te revoir.', important: true }
         : message(after)
+      if (newLevel > oldLevel) sfx.levelUp()
+      else sfx[sound]()
       show(
         newLevel > oldLevel && !m.important
           ? { text: levelUpMessage(newLevel), tone: 'gold', undo: () => restoreTo(before) }
@@ -167,6 +171,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   )
 
   const revealCard = useCallback((index: number) => {
+    if (stateRef.current.daily?.cards[index]?.revealed) return
+    sfx.flip()
     dispatch({ type: 'revealCard', index })
   }, [])
 
@@ -178,6 +184,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       daily.cards.map((c) => c.challengeId),
     )
     dispatch({ type: 'rerollCard', index, challengeId })
+    sfx.flip()
     setToast(null)
   }, [])
 
@@ -203,6 +210,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           return { text: cardDoneMessage(r.xp) }
         },
         card.rarity === 'common' ? 'accent' : 'gold',
+        'card',
       )
     },
     [reward],
@@ -210,6 +218,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const uncompleteTask = useCallback((id: string) => {
     dispatch({ type: 'uncomplete', id, now: new Date() })
+    sfx.uncheck()
     setToast(null)
   }, [])
 
@@ -224,6 +233,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const startExpedition = useCallback((minutes: Duration, taskId?: string) => {
     dispatch({ type: 'startExpedition', minutes, taskId, now: new Date() })
+    sfx.depart()
     setToast(null)
   }, [])
 
@@ -240,6 +250,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const after = reducer(before, { type: 'finishExpedition', loot: found, now })
     dispatch({ type: 'finishExpedition', loot: found, now })
     setLoot({ ...found, taskId: before.expedition.taskId })
+    if (found.completion >= 1) sfx.loot()
+    else sfx.coin()
     setToast(null)
     const from = currentForm(before.creature)
     const to = currentForm(after.creature)
@@ -255,6 +267,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const after = reducer(before, { type: 'buyItem', itemId })
       if (after === before) return
       dispatch({ type: 'buyItem', itemId })
+      sfx.coin()
       const item = getItem(itemId)!
       const placed = after.nest.slots.includes(itemId) || after.nest.backdrop === itemId
       show({

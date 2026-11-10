@@ -6,6 +6,7 @@ import { NestScene } from '../components/NestScene'
 import { Button, Card, RarityChip, ScreenHeader, Stat } from '../components/ui'
 import { currentForm } from '../game/creature'
 import { DEFAULT_BACKDROP, ITEMS, getItem, type Item, type ItemKind } from '../game/items'
+import { burstFrom, cssVar } from '../fx/particles'
 import { useGame } from '../game/store'
 import './Nest.css'
 
@@ -172,7 +173,10 @@ function Shop() {
                   variant="gold"
                   className="buy"
                   disabled={missing > 0}
-                  onClick={() => buyItem(item.id)}
+                  onClick={(e) => {
+                    burstFrom(e.currentTarget, [cssVar('--gold'), item.color, '#ffffff'], { count: 28 })
+                    buyItem(item.id)
+                  }}
                   aria-label={`Acheter ${item.name} pour ${item.price} pièces`}
                 >
                   <Icon name="coin" size={16} /> {item.price}

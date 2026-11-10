@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Creature } from '../components/Creature'
 import { Icon } from '../components/Icon'
 import { Button, Card, RarityChip, ScreenHeader } from '../components/ui'
@@ -6,6 +6,7 @@ import { currentForm } from '../game/creature'
 import { DURATIONS, LOOT, progress, remainingMs, type Duration } from '../game/expedition'
 import { getItem } from '../game/items'
 import { todaysTasks } from '../game/rules'
+import { burstFrom, cssVar } from '../fx/particles'
 import { useGame } from '../game/store'
 import { formatClock, useNow } from '../useNow'
 import './Expedition.css'
@@ -184,6 +185,17 @@ function Journey() {
 
 function LootView() {
   const { loot, clearLoot, state, completeTask } = useGame()
+  const hero = useRef<HTMLDivElement>(null)
+
+  // A shower of light when the creature empties its pockets.
+  useEffect(() => {
+    if (!loot || loot.completion < 1) return
+    const t = setTimeout(() => {
+      burstFrom(hero.current, [cssVar('--gold'), cssVar('--accent'), '#ffffff'], { count: 50, power: 1.3, upward: true, spread: 1.6 })
+    }, 250)
+    return () => clearTimeout(t)
+  }, [loot])
+
   if (!loot) return null
   const form = currentForm(state.creature)
   const item = loot.itemId ? getItem(loot.itemId) : undefined
@@ -193,7 +205,7 @@ function LootView() {
 
   return (
     <div className="stack loot">
-      <div className="loot-hero">
+      <div className="loot-hero" ref={hero}>
         <Creature stage={form.stage} branch={form.branch} seed={state.creature.seed} eggProgress={state.player.tasksDone} mood="happy" size={140} />
         <h2>{full ? 'De retour, avec du butin.' : loot.minutesSpent < 1 ? 'Déjà rentré ?' : 'Retour anticipé.'}</h2>
         <p className="muted">

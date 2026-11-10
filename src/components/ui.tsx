@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode, Ref } from 'react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { Icon, type IconName } from './Icon'
 import type { Category, Rarity } from '../game/types'
 import './ui.css'
@@ -64,23 +64,50 @@ export function ProgressBar({
   max,
   tone = 'accent',
   label,
+  cycle,
 }: {
   value: number
   max: number
   tone?: 'accent' | 'gold' | 'coral'
   label: string
+  /** Bump when the bar wraps around (a new level): it fills up, then restarts from zero. */
+  cycle?: number
 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
+  const [shown, setShown] = useState(pct)
+  const [instant, setInstant] = useState(false)
+  const [gaining, setGaining] = useState(false)
+  const prev = useRef({ pct, cycle })
+
+  useEffect(() => {
+    const before = prev.current
+    prev.current = { pct, cycle }
+    const timers: ReturnType<typeof setTimeout>[] = []
+    if (cycle !== undefined && before.cycle !== undefined && cycle > before.cycle) {
+      // New level: finish the bar, snap back to empty, then fill to the new value.
+      setShown(100)
+      timers.push(setTimeout(() => (setInstant(true), setShown(0)), 650))
+      timers.push(setTimeout(() => (setInstant(false), setShown(pct)), 700))
+    } else {
+      setShown(pct)
+    }
+    if (pct > before.pct || (cycle ?? 0) > (before.cycle ?? 0)) {
+      setGaining(true)
+      timers.push(setTimeout(() => setGaining(false), 1100))
+    }
+    return () => timers.forEach(clearTimeout)
+  }, [pct, cycle])
+
   return (
     <div
-      className={`progress progress-${tone}`}
+      className={`progress progress-${tone} ${gaining ? 'is-gaining' : ''} ${instant ? 'is-instant' : ''}`}
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
       aria-valuemax={max}
       aria-valuenow={value}
     >
-      <div className="progress-fill" style={{ width: `${pct}%` }} />
+      <div className="progress-fill" style={{ width: `${shown}%` }} />
     </div>
   )
 }

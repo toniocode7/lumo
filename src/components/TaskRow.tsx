@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { burstFrom, cssVar, floatText } from '../fx/particles'
 import { useGame } from '../game/store'
 import { REWARDS, repeatLabel } from '../game/rules'
 import type { Task } from '../game/types'
@@ -20,7 +21,12 @@ export function TaskRow({ task, done }: { task: Task; done: boolean }) {
         className="task-check"
         aria-pressed={done}
         aria-label={done ? `Décocher « ${task.title} »` : `Terminer « ${task.title} »`}
-        onClick={() => (done ? uncompleteTask(task.id) : completeTask(task.id))}
+        onClick={(e) => {
+          if (done) return uncompleteTask(task.id)
+          burstFrom(e.currentTarget, [cssVar(`--cat-${task.category}`), '#ffffff', cssVar('--accent')])
+          floatText(e.currentTarget, `+${r.xp} XP`)
+          completeTask(task.id)
+        }}
       >
         <Icon name="check" size={18} />
       </button>
