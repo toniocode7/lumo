@@ -19,7 +19,7 @@ npm test   # règles du jeu et sauvegarde
 - [x] 4. Cartes du jour
 - [x] 5. Expéditions
 - [x] 6. Série, joker et conséquence douce
-- [ ] 7. Nid et boutique
+- [x] 7. Nid et boutique
 - [ ] 8. Le « jus »
 - [ ] 9. PWA et mise en ligne
 

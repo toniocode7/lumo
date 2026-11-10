@@ -1,5 +1,6 @@
 .stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
@@ -31,10 +32,15 @@
   padding: var(--space-4) var(--space-4) var(--space-5);
   border-radius: var(--radius-l);
   border: 1px solid var(--border);
-  background:
-    radial-gradient(70% 60% at 50% 38%, rgb(79 209 197 / 0.1), transparent 70%),
-    var(--surface);
   overflow: hidden;
+}
+
+/* Painted backdrops are dark scenes: keep their text light in both themes. */
+.nest-stage:not(.backdrop-night) .creature-name {
+  color: #eceef4;
+}
+.nest-stage:not(.backdrop-night) .creature-name .muted {
+  color: rgb(236 238 244 / 0.75);
 }
 
 .nest-ground {

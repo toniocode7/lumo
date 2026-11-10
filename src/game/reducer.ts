@@ -4,6 +4,7 @@ import { advanceCreature } from './creature'
 import type { Duration, Loot } from './expedition'
 import { REWARDS, dayKey } from './rules'
 import { hadActivity } from './streak'
+import { DEFAULT_BACKDROP, getItem } from './items'
 import type { Category, Daily, GameState, Repeat, Size } from './types'
 
 export type NewTask = { title: string; size: Size; category: Category; repeat: Repeat }
@@ -20,6 +21,9 @@ export type Action =
   | { type: 'completeCard'; index: number; now: Date; itemId?: string }
   | { type: 'startExpedition'; minutes: Duration; taskId?: string; now: Date }
   | { type: 'finishExpedition'; loot: Loot; now: Date }
+  | { type: 'buyItem'; itemId: string }
+  | { type: 'placeItem'; slot: number; itemId: string | null }
+  | { type: 'setBackdrop'; itemId: string }
 
 export const initialState: GameState = {
   version: 1,
@@ -38,6 +42,18 @@ export const initialState: GameState = {
   expedition: null,
   activeDays: [],
   inventory: [],
+  nest: { backdrop: DEFAULT_BACKDROP, slots: [null, null, null, null] },
+}
+
+export const NEST_SLOTS = 4
+
+/** New decorations go straight into the first free spot, so finds show up in the nest. */
+export function autoPlace(state: GameState, itemId: string | undefined): GameState {
+  const item = itemId ? getItem(itemId) : undefined
+  if (!item || item.kind === 'backdrop' || state.nest.slots.includes(item.id)) return state
+  const free = state.nest.slots.indexOf(null)
+  if (free < 0) return state
+  return { ...state, nest: { ...state.nest, slots: state.nest.slots.map((s, i) => (i === free ? item.id : s)) } }
 }
 
 const markActive = (days: string[], day: string) =>
@@ -169,7 +185,7 @@ export function reducer(state: GameState, action: Action): GameState {
         daily: { ...next.daily!, bonusClaimed: next.daily!.bonusClaimed || bonus },
         activeDays: markActive(state.activeDays, dayKey(action.now)),
       }
-      return next
+      return autoPlace(next, itemId)
     }
 
     case 'startExpedition':
@@ -194,13 +210,49 @@ export function reducer(state: GameState, action: Action): GameState {
         expeditionsDone: p.expeditionsDone + (loot.completion >= 1 ? 1 : 0),
         focusMinutes: p.focusMinutes + loot.minutesSpent,
       }
-      return {
+      return autoPlace(
+        {
+          ...state,
+          player,
+          expedition: null,
+          creature: advanceCreature(state.creature, player, action.now),
+          inventory: loot.itemId ? [...state.inventory, loot.itemId] : state.inventory,
+        },
+        loot.itemId,
+      )
+    }
+
+    case 'buyItem': {
+      const item = getItem(action.itemId)
+      if (!item || item.source !== 'shop' || item.price === undefined) return state
+      if (state.inventory.includes(item.id) || item.id === DEFAULT_BACKDROP) return state
+      if (state.player.coins < item.price) return state
+      const next = {
         ...state,
-        player,
-        expedition: null,
-        creature: advanceCreature(state.creature, player, action.now),
-        inventory: loot.itemId ? [...state.inventory, loot.itemId] : state.inventory,
+        player: { ...state.player, coins: state.player.coins - item.price },
+        inventory: [...state.inventory, item.id],
       }
+      return item.kind === 'backdrop'
+        ? { ...next, nest: { ...next.nest, backdrop: item.id } }
+        : autoPlace(next, item.id)
+    }
+
+    case 'placeItem': {
+      const { slot, itemId } = action
+      if (slot < 0 || slot >= NEST_SLOTS) return state
+      if (itemId !== null) {
+        const item = getItem(itemId)
+        if (!item || item.kind === 'backdrop' || !state.inventory.includes(itemId)) return state
+      }
+      // An item sits in one spot at a time: placing it again moves it.
+      const slots = state.nest.slots.map((s, i) => (i === slot ? itemId : s === itemId ? null : s))
+      return { ...state, nest: { ...state.nest, slots } }
+    }
+
+    case 'setBackdrop': {
+      const owned = action.itemId === DEFAULT_BACKDROP || state.inventory.includes(action.itemId)
+      if (!owned || getItem(action.itemId)?.kind !== 'backdrop') return state
+      return { ...state, nest: { ...state.nest, backdrop: action.itemId } }
     }
   }
 }

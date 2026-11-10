@@ -228,8 +228,9 @@ describe('daily cards', () => {
   })
 
   it('prefers items the player does not own yet', () => {
-    const owned = ITEMS.slice(1).map((i) => i.id)
-    expect(pickLegendaryItem(owned, () => 0.9)).toBe(ITEMS[0].id)
+    const legendary = ITEMS.filter((i) => i.source === 'legendary')
+    const owned = legendary.slice(1).map((i) => i.id)
+    expect(pickLegendaryItem(owned, () => 0.9)).toBe(legendary[0].id)
   })
 })
 
@@ -342,5 +343,64 @@ describe('streak', () => {
       tasks: [{ id: 'x', title: 'X', size: 's', category: 'mind', repeat: 'daily', createdAt: '', completions: [d(3), d(2)] }],
     })
     expect(s.activeDays).toEqual([d(2), d(3)])
+  })
+})
+
+describe('nest and shop', () => {
+  const rich = (coins: number): GameState => ({ ...initialState, player: { ...initialState.player, coins } })
+
+  it('buys an item once, spends coins and places it in the nest', () => {
+    const s = reducer(rich(100), { type: 'buyItem', itemId: 'fern' })
+    expect(s.player.coins).toBe(60)
+    expect(s.inventory).toEqual(['fern'])
+    expect(s.nest.slots[0]).toBe('fern')
+    expect(reducer(s, { type: 'buyItem', itemId: 'fern' })).toBe(s)
+  })
+
+  it('refuses purchases without enough coins, and loot-only items', () => {
+    const s = rich(20)
+    expect(reducer(s, { type: 'buyItem', itemId: 'fern' })).toBe(s)
+    expect(reducer(rich(9999), { type: 'buyItem', itemId: 'star-shard' }).inventory).toEqual([])
+  })
+
+  it('applies a bought backdrop', () => {
+    const s = reducer(rich(500), { type: 'buyItem', itemId: 'aurora' })
+    expect(s.nest.backdrop).toBe('aurora')
+    expect(s.nest.slots).toEqual([null, null, null, null])
+    expect(reducer(s, { type: 'setBackdrop', itemId: 'dawn' }).nest.backdrop).toBe('aurora') // not owned
+    expect(reducer(s, { type: 'setBackdrop', itemId: 'night' }).nest.backdrop).toBe('night')
+  })
+
+  it('moves an item when placed in another spot, and only places owned items', () => {
+    let s = reducer(rich(500), { type: 'buyItem', itemId: 'cairn' })
+    s = reducer(s, { type: 'placeItem', slot: 3, itemId: 'cairn' })
+    expect(s.nest.slots).toEqual([null, null, null, 'cairn'])
+    s = reducer(s, { type: 'placeItem', slot: 1, itemId: 'lantern' })
+    expect(s.nest.slots[1]).toBeNull()
+    s = reducer(s, { type: 'placeItem', slot: 3, itemId: null })
+    expect(s.nest.slots).toEqual([null, null, null, null])
+  })
+
+  it('puts expedition finds straight into the nest', () => {
+    let s = reducer(initialState, { type: 'startExpedition', minutes: 15, now: monday9am })
+    s = reducer(s, {
+      type: 'finishExpedition',
+      now: monday9am,
+      loot: { xp: 20, coins: 15, completion: 1, minutesSpent: 15, itemId: 'glow-moss' },
+    })
+    expect(s.nest.slots[0]).toBe('glow-moss')
+  })
+
+  it('gives every item a drawing, and every shop item a price', () => {
+    for (const i of ITEMS) {
+      expect(i.art).toBeTruthy()
+      if (i.source === 'shop') expect(i.price).toBeGreaterThanOrEqual(0)
+      else expect(i.price).toBeUndefined()
+    }
+  })
+
+  it('places items found before the nest existed', () => {
+    const s = normalize({ inventory: ['moonstone', 'star-shard'] })
+    expect(s.nest.slots).toEqual(['moonstone', 'star-shard', null, null])
   })
 })

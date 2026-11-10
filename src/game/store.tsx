@@ -46,6 +46,9 @@ type Game = {
   finishExpedition: () => void
   loot: Loot | null
   clearLoot: () => void
+  buyItem: (itemId: string) => void
+  placeItem: (slot: number, itemId: string | null) => void
+  setBackdrop: (itemId: string) => void
   toast: Toast | null
   dismissToast: () => void
   sheetOpen: boolean
@@ -246,6 +249,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const today = dayKey()
   const streak = useMemo(() => streakInfo(state.activeDays, today), [state.activeDays, today])
 
+  const buyItem = useCallback(
+    (itemId: string) => {
+      const before = stateRef.current
+      const after = reducer(before, { type: 'buyItem', itemId })
+      if (after === before) return
+      dispatch({ type: 'buyItem', itemId })
+      const item = getItem(itemId)!
+      const placed = after.nest.slots.includes(itemId) || after.nest.backdrop === itemId
+      show({
+        text: placed ? `${item.name} rejoint le nid.` : `${item.name} t’attend dans ta collection.`,
+        tone: 'gold',
+        undo: () => restoreTo(before),
+      })
+    },
+    [show, restoreTo],
+  )
+
+  const placeItem = useCallback((slot: number, itemId: string | null) => {
+    dispatch({ type: 'placeItem', slot, itemId })
+  }, [])
+
+  const setBackdrop = useCallback((itemId: string) => {
+    dispatch({ type: 'setBackdrop', itemId })
+  }, [])
+
   const value = useMemo<Game>(
     () => ({
       state,
@@ -262,6 +290,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       finishExpedition,
       loot,
       clearLoot: () => setLoot(null),
+      buyItem,
+      placeItem,
+      setBackdrop,
       toast,
       dismissToast: () => setToast(null),
       sheetOpen,
@@ -285,6 +316,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       startExpedition,
       finishExpedition,
       loot,
+      buyItem,
+      placeItem,
+      setBackdrop,
       toast,
       sheetOpen,
       pulse,

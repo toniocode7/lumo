@@ -1,0 +1,75 @@
+.nest-scene {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 100%;
+}
+
+.nest-creature {
+  position: relative;
+  z-index: 1;
+}
+
+.nest-slot {
+  position: absolute;
+  bottom: 4px;
+  display: grid;
+  place-items: end center;
+  pointer-events: none;
+}
+
+/* Front spots at the edges, back spots closer and a little higher */
+.slot-0 {
+  left: 2%;
+  z-index: 2;
+}
+.slot-1 {
+  left: 20%;
+  bottom: 22px;
+  opacity: 0.85;
+}
+.slot-2 {
+  right: 20%;
+  bottom: 22px;
+  opacity: 0.85;
+}
+.slot-3 {
+  right: 2%;
+  z-index: 2;
+}
+
+.is-editing .nest-slot {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.slot-btn {
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 2px;
+  border-radius: var(--radius-m);
+  border: 1.5px dashed var(--text-3);
+  background: rgb(0 0 0 / 0.12);
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast),
+    transform var(--dur-fast);
+}
+
+.slot-btn.has-item {
+  border-color: transparent;
+  background: none;
+}
+
+.slot-btn:active {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) {
+  .slot-btn:hover {
+    border-color: var(--accent);
+  }
+}

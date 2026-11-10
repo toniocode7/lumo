@@ -62,6 +62,12 @@ export interface Daily {
   bonusClaimed: boolean
 }
 
+export interface Nest {
+  backdrop: string
+  /** Decorations placed around the creature, left to right. null = empty spot. */
+  slots: (string | null)[]
+}
+
 export interface GameState {
   version: 1
   player: Player
@@ -73,4 +79,5 @@ export interface GameState {
   activeDays: string[]
   /** Item ids the player owns (duplicates allowed). */
   inventory: string[]
+  nest: Nest
 }

@@ -1,5 +1,5 @@
 import { advanceCreature, newSeed } from './creature'
-import { initialState } from './reducer'
+import { autoPlace, initialState } from './reducer'
 import { activityFromHistory } from './streak'
 import type { GameState } from './types'
 
@@ -56,7 +56,10 @@ export function normalize(raw: unknown): GameState {
     expedition: s.expedition ?? null,
     activeDays: [],
     inventory: Array.isArray(s.inventory) ? s.inventory : [],
+    nest: s.nest?.slots ? s.nest : initialState.nest,
   }
+  // Items found before the nest existed get placed in it.
+  if (!s.nest?.slots) for (const id of state.inventory) Object.assign(state, autoPlace(state, id))
   // Saves from before the streak existed rebuild it from completed tasks and cards.
   state.activeDays = Array.isArray(s.activeDays) ? s.activeDays : activityFromHistory(state)
   return state

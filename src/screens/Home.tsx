@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Creature, type Mood } from '../components/Creature'
+import { NestScene } from '../components/NestScene'
 import { HATCH_AFTER_TASKS, currentForm, formName } from '../game/creature'
 import { TaskRow } from '../components/TaskRow'
 import { Button, Card, ProgressBar, Stat } from '../components/ui'
@@ -69,25 +70,29 @@ export function Home() {
         </Link>
       </div>
 
-      <div className={`nest-stage ${streak.sleeping && !exp ? 'is-misty' : ''}`}>
-        {exp ? (
-          <Link to="/expedition" className="away" aria-label="Voir l’expédition">
-            <span className="away-icon">
-              <Icon name="compass" size={36} />
-            </span>
-          </Link>
-        ) : (
-          <Creature
-            stage={form.stage}
-            branch={form.branch}
-            seed={state.creature.seed}
-            eggProgress={state.player.tasksDone}
-            mood={mood}
-            pulseKey={pulse}
-            size={180}
-            label={name}
-          />
-        )}
+      <div
+        className={`nest-stage backdrop-${state.nest.backdrop} ${streak.sleeping && !exp ? 'is-misty' : ''}`}
+      >
+        <NestScene slots={state.nest.slots}>
+          {exp ? (
+            <Link to="/expedition" className="away" aria-label="Voir l’expédition">
+              <span className="away-icon">
+                <Icon name="compass" size={36} />
+              </span>
+            </Link>
+          ) : (
+            <Creature
+              stage={form.stage}
+              branch={form.branch}
+              seed={state.creature.seed}
+              eggProgress={state.player.tasksDone}
+              mood={mood}
+              pulseKey={pulse}
+              size={180}
+              label={name}
+            />
+          )}
+        </NestScene>
         <div className="nest-ground" />
         <div className="creature-name">
           <h2>{name}</h2>
