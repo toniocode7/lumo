@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { ALL_DONE_BONUS, cardReward, drawDaily, pickChallenge } from './cards'
 import { currentForm } from './creature'
+import { computeLoot, type Duration, type Loot } from './expedition'
 import { getItem, pickLegendaryItem } from './items'
 import { cardDoneMessage, doneMessage, levelUpMessage } from './messages'
 import { initialState, reducer, type Action, type NewTask } from './reducer'
@@ -38,6 +39,11 @@ type Game = {
   revealCard: (index: number) => void
   rerollCard: (index: number) => void
   completeCard: (index: number) => void
+  startExpedition: (minutes: Duration, taskId?: string) => void
+  /** Brings the creature home (early or not) and returns what it found. */
+  finishExpedition: () => void
+  loot: Loot | null
+  clearLoot: () => void
   toast: Toast | null
   dismissToast: () => void
   sheetOpen: boolean
@@ -63,6 +69,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [pulse, setPulse] = useState(0)
   const [evolution, setEvolution] = useState<EvolutionEvent | null>(null)
+  const [loot, setLoot] = useState<Loot | null>(null)
   const stateRef = useRef(state)
   stateRef.current = state
   const toastId = useRef(0)
@@ -205,6 +212,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [show, restoreTo],
   )
 
+  const startExpedition = useCallback((minutes: Duration, taskId?: string) => {
+    dispatch({ type: 'startExpedition', minutes, taskId, now: new Date() })
+    setToast(null)
+  }, [])
+
+  const finishExpedition = useCallback(() => {
+    const before = stateRef.current
+    if (!before.expedition) return
+    const now = new Date()
+    const found = computeLoot(before.expedition, now.getTime(), {
+      coins: Math.random(),
+      item: Math.random(),
+      rare: Math.random(),
+      pick: Math.random(),
+    })
+    const after = reducer(before, { type: 'finishExpedition', loot: found, now })
+    dispatch({ type: 'finishExpedition', loot: found, now })
+    setLoot({ ...found, taskId: before.expedition.taskId })
+    setToast(null)
+    const from = currentForm(before.creature)
+    const to = currentForm(after.creature)
+    if (to.stage > from.stage) setEvolution({ from, to })
+  }, [])
+
   const value = useMemo<Game>(
     () => ({
       state,
@@ -216,6 +247,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       revealCard,
       rerollCard,
       completeCard,
+      startExpedition,
+      finishExpedition,
+      loot,
+      clearLoot: () => setLoot(null),
       toast,
       dismissToast: () => setToast(null),
       sheetOpen,
@@ -235,6 +270,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       revealCard,
       rerollCard,
       completeCard,
+      startExpedition,
+      finishExpedition,
+      loot,
       toast,
       sheetOpen,
       pulse,

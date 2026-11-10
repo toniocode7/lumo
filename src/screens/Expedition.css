@@ -1,0 +1,194 @@
+/* Landscape with the trail */
+.scene {
+  position: relative;
+  height: 210px;
+  border-radius: var(--radius-l);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.scene svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stars {
+  position: absolute;
+  inset: 0 0 50% 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 22%, #fff8, transparent),
+    radial-gradient(1px 1px at 28% 12%, #fff6, transparent),
+    radial-gradient(1.5px 1.5px at 47% 30%, #fff7, transparent),
+    radial-gradient(1px 1px at 63% 15%, #fff6, transparent),
+    radial-gradient(1.5px 1.5px at 78% 26%, #fff8, transparent),
+    radial-gradient(1px 1px at 90% 10%, #fff6, transparent);
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.flag {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--gold);
+}
+
+.traveler {
+  position: absolute;
+  transform: translate(-50%, -62%);
+  transition:
+    left 1s linear,
+    top 1s linear;
+}
+
+/* Duration picker */
+.durations {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.durations legend {
+  margin-top: 0;
+}
+
+.duration {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.duration[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.duration-min {
+  width: 44px;
+  font-size: 28px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.duration-label {
+  display: grid;
+}
+
+.duration-label small {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.link-task {
+  display: grid;
+}
+
+.link-task .section-title {
+  margin-top: 0;
+}
+
+select.field {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 50%,
+    calc(100% - 16px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 44px;
+  font-size: 16px;
+}
+
+.hint {
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Running timer */
+.clock {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  text-align: center;
+}
+
+.clock .num {
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Loot */
+.loot-hero {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  animation: loot-in 600ms var(--ease-out) both;
+}
+
+.loot-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.loot-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-text);
+  animation: loot-in 500ms var(--ease-out) both;
+}
+
+.loot-row:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.loot-row:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+.loot-row.gold {
+  color: var(--gold-text);
+}
+
+.loot-row.item {
+  color: var(--text);
+}
+
+.loot-row.item .chip {
+  margin-left: auto;
+}
+
+@keyframes loot-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+@keyframes twinkle {
+  50% {
+    opacity: 0.5;
+  }
+}

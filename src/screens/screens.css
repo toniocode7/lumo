@@ -287,3 +287,28 @@
 .evo-list .creature {
   margin: 0;
 }
+
+.away {
+  display: grid;
+  place-items: center;
+  width: 180px;
+  height: 180px;
+  color: var(--text-3);
+  text-decoration: none;
+}
+
+.away-icon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border);
+  animation: away-spin 12s linear infinite;
+}
+
+@keyframes away-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

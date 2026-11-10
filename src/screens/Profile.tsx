@@ -30,6 +30,14 @@ export function Profile() {
           <span className="num">{player.xp}</span>
           <small>XP au total</small>
         </Card>
+        <Card className="big-stat">
+          <span className="num">{player.cardsDone}</span>
+          <small>cartes relevées</small>
+        </Card>
+        <Card className="big-stat">
+          <span className="num">{player.focusMinutes}</span>
+          <small>minutes de concentration</small>
+        </Card>
       </div>
 
       <h2 className="section-title">Répartition</h2>

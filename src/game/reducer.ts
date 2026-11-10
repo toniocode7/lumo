@@ -1,6 +1,7 @@
 import { ALL_DONE_BONUS, cardReward } from './cards'
 import { getChallenge } from './challenges'
 import { advanceCreature } from './creature'
+import type { Duration, Loot } from './expedition'
 import { REWARDS, dayKey } from './rules'
 import type { Category, Daily, GameState, Repeat, Size } from './types'
 
@@ -16,6 +17,8 @@ export type Action =
   | { type: 'revealCard'; index: number }
   | { type: 'rerollCard'; index: number; challengeId: string }
   | { type: 'completeCard'; index: number; now: Date; itemId?: string }
+  | { type: 'startExpedition'; minutes: Duration; taskId?: string; now: Date }
+  | { type: 'finishExpedition'; loot: Loot; now: Date }
 
 export const initialState: GameState = {
   version: 1,
@@ -24,11 +27,14 @@ export const initialState: GameState = {
     coins: 0,
     tasksDone: 0,
     cardsDone: 0,
+    expeditionsDone: 0,
+    focusMinutes: 0,
     byCategory: { body: 0, mind: 0, create: 0, order: 0 },
   },
   creature: { seed: 1, history: [] },
   tasks: [],
   daily: null,
+  expedition: null,
   inventory: [],
 }
 
@@ -150,6 +156,37 @@ export function reducer(state: GameState, action: Action): GameState {
         daily: { ...next.daily!, bonusClaimed: next.daily!.bonusClaimed || bonus },
       }
       return next
+    }
+
+    case 'startExpedition':
+      if (state.expedition) return state
+      return {
+        ...state,
+        expedition: {
+          startedAt: action.now.toISOString(),
+          minutes: action.minutes,
+          taskId: action.taskId,
+        },
+      }
+
+    case 'finishExpedition': {
+      if (!state.expedition) return state
+      const { loot } = action
+      const p = state.player
+      const player = {
+        ...p,
+        xp: p.xp + loot.xp,
+        coins: p.coins + loot.coins,
+        expeditionsDone: p.expeditionsDone + (loot.completion >= 1 ? 1 : 0),
+        focusMinutes: p.focusMinutes + loot.minutesSpent,
+      }
+      return {
+        ...state,
+        player,
+        expedition: null,
+        creature: advanceCreature(state.creature, player, action.now),
+        inventory: loot.itemId ? [...state.inventory, loot.itemId] : state.inventory,
+      }
     }
   }
 }

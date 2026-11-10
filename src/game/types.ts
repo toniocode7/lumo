@@ -1,3 +1,5 @@
+import type { Expedition } from './expedition'
+
 export type Category = 'body' | 'mind' | 'create' | 'order'
 export type Size = 's' | 'm' | 'l'
 
@@ -20,6 +22,8 @@ export interface Player {
   coins: number
   tasksDone: number
   cardsDone: number
+  expeditionsDone: number
+  focusMinutes: number
   byCategory: Record<Category, number>
 }
 
@@ -64,6 +68,7 @@ export interface GameState {
   creature: Creature
   tasks: Task[]
   daily: Daily | null
+  expedition: Expedition | null
   /** Item ids the player owns (duplicates allowed). */
   inventory: string[]
 }

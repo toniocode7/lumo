@@ -6,7 +6,8 @@ import { loadState, normalize, saveState } from './storage'
 import { currentForm, dominantCategory } from './creature'
 import { drawDaily, pickChallenge, rollRarity } from './cards'
 import { CHALLENGES, getChallenge } from './challenges'
-import { ITEMS, pickLegendaryItem } from './items'
+import { ITEMS, getItem, pickLegendaryItem } from './items'
+import { computeLoot, progress, remainingMs } from './expedition'
 import type { GameState, Rarity } from './types'
 
 const monday9am = new Date(2026, 10, 9, 9, 0) // Mon 9 Nov 2026
@@ -228,5 +229,51 @@ describe('daily cards', () => {
   it('prefers items the player does not own yet', () => {
     const owned = ITEMS.slice(1).map((i) => i.id)
     expect(pickLegendaryItem(owned, () => 0.9)).toBe(ITEMS[0].id)
+  })
+})
+
+describe('expeditions', () => {
+  const start = new Date(2026, 10, 9, 9, 0)
+  const exp = { startedAt: start.toISOString(), minutes: 25 as const }
+  const at = (min: number) => start.getTime() + min * 60_000
+  const rolls = { coins: 0.5, item: 0.99, rare: 0.99, pick: 0 }
+
+  it('counts time from the start, not from a ticking counter', () => {
+    expect(remainingMs(exp, at(10))).toBe(15 * 60_000)
+    expect(remainingMs(exp, at(40))).toBe(0)
+    expect(progress(exp, at(12.5))).toBeCloseTo(0.5)
+  })
+
+  it('gives the full loot when the trip is finished', () => {
+    const loot = computeLoot(exp, at(25), rolls)
+    expect(loot).toMatchObject({ xp: 40, coins: 30, completion: 1, minutesSpent: 25 })
+    expect(loot.itemId).toBeUndefined()
+  })
+
+  it('finds rarer items on longer trips', () => {
+    const r = { coins: 0.5, item: 0.1, rare: 0.5, pick: 0 }
+    const short = computeLoot({ ...exp, minutes: 15 }, at(15), r)
+    const long = computeLoot({ ...exp, minutes: 45 }, at(45), r)
+    expect(getItem(short.itemId!)!.rarity).toBe('common')
+    expect(getItem(long.itemId!)!.rarity).toBe('rare')
+  })
+
+  it('gives reduced loot and no item when coming home early', () => {
+    const loot = computeLoot(exp, at(12.5), { ...rolls, item: 0 })
+    expect(loot.itemId).toBeUndefined()
+    expect(loot.xp).toBe(10) // half the time, half the share
+    expect(loot.minutesSpent).toBe(12)
+  })
+
+  it('applies loot once and frees the creature', () => {
+    let s = reducer(initialState, { type: 'startExpedition', minutes: 25, now: start })
+    s = reducer(s, { type: 'startExpedition', minutes: 45, now: start })
+    expect(s.expedition!.minutes).toBe(25)
+    const loot = computeLoot(s.expedition!, at(25), { ...rolls, item: 0 })
+    s = reducer(s, { type: 'finishExpedition', loot, now: new Date(at(25)) })
+    expect(s.expedition).toBeNull()
+    expect(s.player).toMatchObject({ xp: 40, expeditionsDone: 1, focusMinutes: 25 })
+    expect(s.inventory).toHaveLength(1)
+    expect(reducer(s, { type: 'finishExpedition', loot, now: start })).toBe(s)
   })
 })

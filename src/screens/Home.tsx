@@ -6,6 +6,8 @@ import { TaskRow } from '../components/TaskRow'
 import { Button, Card, ProgressBar, Stat } from '../components/ui'
 import { useGame } from '../game/store'
 import { levelFromXp, todaysTasks } from '../game/rules'
+import { remainingMs } from '../game/expedition'
+import { formatClock, useNow } from '../useNow'
 import './screens.css'
 
 function caption(todo: number, done: number) {
@@ -29,6 +31,10 @@ export function Home() {
   const { todo, done } = todaysTasks(state)
   const mood: Mood = done.length > 0 && todo.length === 0 ? 'happy' : 'idle'
   const name = formName(form.stage, form.branch)
+  const exp = state.expedition
+  const now = useNow(!!exp)
+  const expLeft = exp ? remainingMs(exp, now) : 0
+  const expLabel = !exp ? 'Prête à partir' : expLeft === 0 ? 'Rentrée, butin à ouvrir' : `Retour dans ${formatClock(expLeft)}`
   const cards = state.daily?.cards ?? []
   const cardsDone = cards.filter((c) => c.done).length
   const cardsHidden = cards.filter((c) => !c.revealed).length
@@ -54,21 +60,33 @@ export function Home() {
       </div>
 
       <div className="nest-stage">
-        <Creature
-          stage={form.stage}
-          branch={form.branch}
-          seed={state.creature.seed}
-          eggProgress={state.player.tasksDone}
-          mood={mood}
-          pulseKey={pulse}
-          size={180}
-          label={name}
-        />
+        {exp ? (
+          <Link to="/expedition" className="away" aria-label="Voir l’expédition">
+            <span className="away-icon">
+              <Icon name="compass" size={36} />
+            </span>
+          </Link>
+        ) : (
+          <Creature
+            stage={form.stage}
+            branch={form.branch}
+            seed={state.creature.seed}
+            eggProgress={state.player.tasksDone}
+            mood={mood}
+            pulseKey={pulse}
+            size={180}
+            label={name}
+          />
+        )}
         <div className="nest-ground" />
         <div className="creature-name">
           <h2>{name}</h2>
           <p className="muted">
-            {form.stage === 0
+            {exp
+              ? expLeft === 0
+                ? 'Rentré de voyage. Va voir ce qu’il rapporte.'
+                : `Parti explorer. Retour dans ${formatClock(expLeft)}.`
+              : form.stage === 0
               ? eggCaption(state.player.tasksDone)
               : caption(todo.length, done.length)}
           </p>
@@ -123,7 +141,7 @@ export function Home() {
           </span>
           <span>
             <strong>Expédition</strong>
-            <small>Bientôt</small>
+            <small>{expLabel}</small>
           </span>
         </Link>
       </div>

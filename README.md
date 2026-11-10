@@ -17,7 +17,7 @@ npm test   # règles du jeu et sauvegarde
 - [x] 2. Tâches, XP, pièces et sauvegarde locale
 - [x] 3. Créature en SVG
 - [x] 4. Cartes du jour
-- [ ] 5. Expéditions
+- [x] 5. Expéditions
 - [ ] 6. Série, joker et conséquence douce
 - [ ] 7. Nid et boutique
 - [ ] 8. Le « jus »
