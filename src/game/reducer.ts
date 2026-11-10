@@ -24,6 +24,7 @@ export type Action =
   | { type: 'buyItem'; itemId: string }
   | { type: 'placeItem'; slot: number; itemId: string | null }
   | { type: 'setBackdrop'; itemId: string }
+  | { type: 'finishOnboarding' }
 
 export const initialState: GameState = {
   version: 1,
@@ -43,6 +44,7 @@ export const initialState: GameState = {
   activeDays: [],
   inventory: [],
   nest: { backdrop: DEFAULT_BACKDROP, slots: [null, null, null, null] },
+  onboarded: false,
 }
 
 export const NEST_SLOTS = 4
@@ -248,6 +250,9 @@ export function reducer(state: GameState, action: Action): GameState {
       const slots = state.nest.slots.map((s, i) => (i === slot ? itemId : s === itemId ? null : s))
       return { ...state, nest: { ...state.nest, slots } }
     }
+
+    case 'finishOnboarding':
+      return state.onboarded ? state : { ...state, onboarded: true }
 
     case 'setBackdrop': {
       const owned = action.itemId === DEFAULT_BACKDROP || state.inventory.includes(action.itemId)

@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { describe, expect, it } from 'vitest'
 import { initialState, reducer } from './reducer'
 import { dayKey, isForToday, levelFromXp, todaysTasks, xpForLevel } from './rules'
-import { loadState, normalize, saveState } from './storage'
+import { exportSave, loadState, normalize, parseSave, saveState } from './storage'
 import { currentForm, dominantCategory } from './creature'
 import { drawDaily, pickChallenge, rollRarity } from './cards'
 import { CHALLENGES, getChallenge } from './challenges'
@@ -402,5 +402,28 @@ describe('nest and shop', () => {
   it('places items found before the nest existed', () => {
     const s = normalize({ inventory: ['moonstone', 'star-shard'] })
     expect(s.nest.slots).toEqual(['moonstone', 'star-shard', null, null])
+  })
+})
+
+describe('save files and first launch', () => {
+  it('round-trips a save through export and import', () => {
+    let s = add(initialState, 'a')
+    s = reducer(s, { type: 'complete', id: 'a', now: monday9am })
+    const { name, json } = exportSave(s, new Date('2026-11-10T12:00:00Z'))
+    expect(name).toBe('lumo-sauvegarde-2026-11-10.json')
+    const back = parseSave(json)
+    expect(back.state).toEqual(normalize(s))
+    expect(back.exportedAt).toBe('2026-11-10T12:00:00.000Z')
+  })
+
+  it('rejects files that are not Lumo saves', () => {
+    expect(() => parseSave('pas du json')).toThrow('pas lisible')
+    expect(() => parseSave('{"app":"autre","state":{}}')).toThrow('pas une sauvegarde Lumo')
+  })
+
+  it('shows the welcome screens only to new players', () => {
+    expect(normalize({}).onboarded).toBe(false)
+    expect(normalize({ player: { xp: 40 } }).onboarded).toBe(true)
+    expect(reducer(initialState, { type: 'finishOnboarding' }).onboarded).toBe(true)
   })
 })

@@ -57,6 +57,8 @@ export function normalize(raw: unknown): GameState {
     activeDays: [],
     inventory: Array.isArray(s.inventory) ? s.inventory : [],
     nest: s.nest?.slots ? s.nest : initialState.nest,
+    // Players who already had progress before the welcome screens existed skip them.
+    onboarded: s.onboarded ?? (player.xp > 0 || (Array.isArray(s.tasks) && s.tasks.length > 0)),
   }
   // Items found before the nest existed get placed in it.
   if (!s.nest?.slots) for (const id of state.inventory) Object.assign(state, autoPlace(state, id))
@@ -76,4 +78,40 @@ export async function loadState(): Promise<GameState> {
 
 export async function saveState(state: GameState): Promise<void> {
   await tx('readwrite', (s) => s.put(state, KEY))
+}
+
+/** Asks the browser not to clear our data under storage pressure (helps on iPhone). */
+export function requestPersistentStorage() {
+  try {
+    void navigator.storage?.persist?.()
+  } catch {
+    // Not supported: data still saves, just without the extra guarantee.
+  }
+}
+
+export interface SaveFile {
+  app: 'lumo'
+  version: 1
+  exportedAt: string
+  state: GameState
+}
+
+export function exportSave(state: GameState, now = new Date()): { name: string; json: string } {
+  const file: SaveFile = { app: 'lumo', version: 1, exportedAt: now.toISOString(), state }
+  const day = now.toISOString().slice(0, 10)
+  return { name: `lumo-sauvegarde-${day}.json`, json: JSON.stringify(file, null, 2) }
+}
+
+/** Reads a save file. Throws a readable message if it isn't one. */
+export function parseSave(text: string): { state: GameState; exportedAt: string } {
+  let data: Partial<SaveFile>
+  try {
+    data = JSON.parse(text)
+  } catch {
+    throw new Error('Ce fichier n’est pas lisible.')
+  }
+  if (data?.app !== 'lumo' || !data.state || typeof data.state !== 'object') {
+    throw new Error('Ce fichier n’est pas une sauvegarde Lumo.')
+  }
+  return { state: normalize(data.state), exportedAt: String(data.exportedAt ?? '') }
 }

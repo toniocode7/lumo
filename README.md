@@ -1,15 +1,42 @@
 # Lumo
 
-Appli de productivité gamifiée : tes tâches font grandir une créature de lumière.
+Appli de productivité gamifiée : tes vraies tâches font grandir une créature de lumière.
 Le cahier des charges complet est dans [BRIEF.md](BRIEF.md).
+
+- Tâches, cartes du jour, expéditions (minuteur de concentration), série avec joker
+- Créature dessinée en SVG : œuf, éclosion, 4 branches d'évolution
+- Nid à décorer, boutique, objets à trouver
+- Sons et particules générés par le code, désactivables
+- Appli installable (PWA), fonctionne hors connexion, données sur l'appareil,
+  export / import de la sauvegarde
 
 ## Lancer en local
 
 ```bash
 npm install
-npm run dev
-npm test   # règles du jeu et sauvegarde
+npm run dev     # http://localhost:5173
+npm test        # règles du jeu, sauvegarde
+npm run build   # version de production dans dist/
 ```
+
+## Mise en ligne (GitHub Pages, gratuit)
+
+Le workflow `.github/workflows/deploy.yml` teste, construit et publie l'appli à chaque
+push sur `main`. Une seule fois, dans le dépôt GitHub :
+
+1. **Settings → Pages → Build and deployment → Source : « GitHub Actions »**
+2. Fusionner le travail dans `main` (ou relancer le workflow depuis l'onglet **Actions**)
+
+L'appli est ensuite disponible sur `https://<compte>.github.io/lumo/`.
+Sur iPhone : l'ouvrir dans Safari, bouton Partager, « Sur l'écran d'accueil ».
+
+## Organisation du code
+
+- `src/game/` : règles du jeu, sans interface (testées dans `game.test.ts`)
+- `src/components/` : briques d'interface, créature, nid, objets
+- `src/screens/` : un fichier par écran
+- `src/fx/` : sons et particules
+- `src/styles/tokens.css` : couleurs, espacements, typographie
 
 ## Avancement
 
@@ -21,6 +48,4 @@ npm test   # règles du jeu et sauvegarde
 - [x] 6. Série, joker et conséquence douce
 - [x] 7. Nid et boutique
 - [x] 8. Le « jus »
-- [ ] 9. PWA et mise en ligne
-
-Le design system est visible dans l'appli : Profil > Design system.
+- [x] 9. PWA, sauvegarde, bienvenue et mise en ligne

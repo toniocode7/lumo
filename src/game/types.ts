@@ -80,4 +80,6 @@ export interface GameState {
   /** Item ids the player owns (duplicates allowed). */
   inventory: string[]
   nest: Nest
+  /** The welcome screens have been seen. */
+  onboarded: boolean
 }

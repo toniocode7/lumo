@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Card, ScreenHeader, categoryLabel } from '../components/ui'
 import { Creature } from '../components/Creature'
+import { SaveCard } from '../components/SaveCard'
 import { EVOLVE_AT, formName } from '../game/creature'
 import { useGame } from '../game/store'
 import { dayKey } from '../game/rules'
@@ -202,6 +203,9 @@ export function Profile() {
           <Icon name="chevron" />
         </Link>
       </Card>
+
+      <h2 className="section-title">Appli et sauvegarde</h2>
+      <SaveCard />
     </>
   )
 }

@@ -480,3 +480,14 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+.import-confirm {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-m);
+  background: var(--gold-soft);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  font-size: 14px;
+}

@@ -16,7 +16,7 @@ import { getItem, pickLegendaryItem } from './items'
 import { cardDoneMessage, doneMessage, levelUpMessage } from './messages'
 import { initialState, reducer, type Action, type NewTask } from './reducer'
 import { REWARDS, dayKey, levelFromXp } from './rules'
-import { loadState, saveState } from './storage'
+import { loadState, requestPersistentStorage, saveState } from './storage'
 import { streakInfo, type StreakInfo } from './streak'
 import { sfx } from '../fx/sound'
 import type { Category, GameState, Stage } from './types'
@@ -50,6 +50,8 @@ type Game = {
   buyItem: (itemId: string) => void
   placeItem: (slot: number, itemId: string | null) => void
   setBackdrop: (itemId: string) => void
+  finishOnboarding: () => void
+  importState: (s: GameState) => void
   toast: Toast | null
   dismissToast: () => void
   sheetOpen: boolean
@@ -85,6 +87,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'restore', state: s })
       setReady(true)
     })
+    requestPersistentStorage()
   }, [])
 
   // New cards each game day (5 am), checked on start, every minute and when the app comes back.
@@ -287,6 +290,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'setBackdrop', itemId })
   }, [])
 
+  const finishOnboarding = useCallback(() => dispatch({ type: 'finishOnboarding' }), [])
+
+  const importState = useCallback(
+    (next: GameState) => {
+      dispatch({ type: 'restore', state: { ...next, onboarded: true } })
+      setLoot(null)
+      setEvolution(null)
+      show({ text: 'Sauvegarde restaurée. Ton compagnon est de retour.', tone: 'gold' })
+    },
+    [show],
+  )
+
   const value = useMemo<Game>(
     () => ({
       state,
@@ -306,6 +321,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyItem,
       placeItem,
       setBackdrop,
+      finishOnboarding,
+      importState,
       toast,
       dismissToast: () => setToast(null),
       sheetOpen,
@@ -332,6 +349,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyItem,
       placeItem,
       setBackdrop,
+      finishOnboarding,
+      importState,
       toast,
       sheetOpen,
       pulse,

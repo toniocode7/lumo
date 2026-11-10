@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Icon, type IconName } from './Icon'
 import { EvolutionOverlay } from './EvolutionOverlay'
 import { TaskSheet } from './TaskSheet'
+import { Welcome } from './Welcome'
 import { ToastHost } from './Toast'
 import './Layout.css'
 
@@ -46,6 +47,7 @@ export function Layout() {
       <ToastHost />
       <TaskSheet />
       <EvolutionOverlay />
+      <Welcome />
     </div>
   )
 }
