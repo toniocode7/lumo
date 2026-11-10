@@ -74,7 +74,7 @@ export function TaskSheet() {
         <input
           ref={input}
           className="field"
-          placeholder="Ex. : courir 20 minutes"
+          placeholder="Ex. : courir 20 minutes"
           value={title}
           maxLength={80}
           onChange={(e) => setTitle(e.target.value)}

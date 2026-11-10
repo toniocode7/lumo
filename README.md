@@ -15,7 +15,7 @@ npm test   # règles du jeu et sauvegarde
 
 - [x] 1. Base du projet, design system et navigation
 - [x] 2. Tâches, XP, pièces et sauvegarde locale
-- [ ] 3. Créature en SVG
+- [x] 3. Créature en SVG
 - [ ] 4. Cartes du jour
 - [ ] 5. Expéditions
 - [ ] 6. Série, joker et conséquence douce

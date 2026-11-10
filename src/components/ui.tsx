@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode, Ref } from 'react'
 import { Icon, type IconName } from './Icon'
 import type { Category } from '../game/types'
 import './ui.css'
@@ -11,14 +11,17 @@ export function Button({
   block,
   children,
   className = '',
+  ref,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
   icon?: IconName
   block?: boolean
+  ref?: Ref<HTMLButtonElement>
 }) {
   return (
     <button
+      ref={ref}
       className={`btn btn-${variant} ${block ? 'btn-block' : ''} ${className}`}
       {...rest}
     >

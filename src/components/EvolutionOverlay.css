@@ -1,0 +1,127 @@
+.evo {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  background: radial-gradient(circle at 50% 40%, #1a2230, #07080c 70%);
+  color: #eceef4;
+  animation: fade-in 400ms var(--ease-out);
+  overflow: hidden;
+}
+
+.evo-rays {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 900px;
+  height: 900px;
+  margin: -450px 0 0 -450px;
+  background: repeating-conic-gradient(rgb(255 255 255 / 0.05) 0 6deg, transparent 6deg 18deg);
+  mask-image: radial-gradient(circle, #000 0, transparent 60%);
+  -webkit-mask-image: radial-gradient(circle, #000 0, transparent 60%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms;
+  animation: evo-spin 30s linear infinite;
+}
+.evo-after .evo-rays {
+  opacity: 1;
+}
+
+.evo-creature {
+  position: relative;
+}
+.evo-before .evo-creature {
+  animation: evo-shake 1.4s ease-in both;
+}
+.evo-flash .evo-creature::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0, rgb(255 255 255 / 0.6) 30%, transparent 65%);
+  animation: evo-flash 500ms ease-out both;
+}
+.evo-after .evo-creature {
+  animation: evo-appear 700ms var(--ease-out) both;
+}
+
+.evo-text {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  max-width: 34ch;
+  min-height: 180px;
+}
+.evo-text h1 {
+  font-size: 26px;
+}
+.evo-text .muted {
+  color: #9aa0b4;
+}
+.evo-text .btn {
+  margin-top: var(--space-3);
+  min-width: 200px;
+}
+.evo-kicker {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.evo-wait {
+  color: #9aa0b4;
+  font-weight: 500;
+}
+
+@keyframes evo-shake {
+  0% {
+    transform: none;
+    filter: brightness(1);
+  }
+  60% {
+    transform: translateX(-2px) rotate(-2deg);
+  }
+  70% {
+    transform: translateX(3px) rotate(3deg);
+  }
+  80% {
+    transform: translateX(-4px) rotate(-4deg);
+  }
+  90% {
+    transform: translateX(4px) rotate(4deg);
+  }
+  100% {
+    transform: none;
+    filter: brightness(1.8);
+  }
+}
+@keyframes evo-flash {
+  from {
+    opacity: 1;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+@keyframes evo-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+    filter: brightness(2.5);
+  }
+}
+@keyframes evo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

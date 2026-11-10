@@ -9,11 +9,15 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { currentForm } from './creature'
 import { doneMessage, levelUpMessage } from './messages'
 import { initialState, reducer, type NewTask } from './reducer'
 import { REWARDS, levelFromXp } from './rules'
 import { loadState, saveState } from './storage'
-import type { GameState } from './types'
+import type { Category, GameState, Stage } from './types'
+
+export type Form = { stage: Stage; branch: Category | null }
+export type EvolutionEvent = { from: Form; to: Form }
 
 export type Toast = {
   id: number
@@ -32,6 +36,10 @@ type Game = {
   toast: Toast | null
   dismissToast: () => void
   sheetOpen: boolean
+  /** Bumped on each completion so the creature can react. */
+  pulse: number
+  evolution: EvolutionEvent | null
+  dismissEvolution: () => void
   openSheet: () => void
   closeSheet: () => void
 }
@@ -48,6 +56,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [pulse, setPulse] = useState(0)
+  const [evolution, setEvolution] = useState<EvolutionEvent | null>(null)
   const stateRef = useRef(state)
   stateRef.current = state
   const toastId = useRef(0)
@@ -84,7 +94,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const before = stateRef.current
       const task = before.tasks.find((t) => t.id === id)
       if (!task) return
-      dispatch({ type: 'complete', id, now: new Date() })
+      const action = { type: 'complete', id, now: new Date() } as const
+      const after = reducer(before, action)
+      dispatch(action)
+      setPulse((n) => n + 1)
+      const from = currentForm(before.creature)
+      const to = currentForm(after.creature)
+      if (to.stage > from.stage) setEvolution({ from, to })
       const r = REWARDS[task.size]
       const oldLevel = levelFromXp(before.player.xp).level
       const newLevel = levelFromXp(before.player.xp + r.xp).level
@@ -124,8 +140,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       sheetOpen,
       openSheet: () => setSheetOpen(true),
       closeSheet: () => setSheetOpen(false),
+      pulse,
+      evolution,
+      dismissEvolution: () => setEvolution(null),
     }),
-    [state, ready, addTask, completeTask, uncompleteTask, deleteTask, toast, sheetOpen],
+    [state, ready, addTask, completeTask, uncompleteTask, deleteTask, toast, sheetOpen, pulse, evolution],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

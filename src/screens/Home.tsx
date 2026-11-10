@@ -1,23 +1,34 @@
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { Orb } from '../components/Orb'
+import { Creature, type Mood } from '../components/Creature'
+import { HATCH_AFTER_TASKS, currentForm, formName } from '../game/creature'
 import { TaskRow } from '../components/TaskRow'
 import { Button, Card, ProgressBar, Stat } from '../components/ui'
 import { useGame } from '../game/store'
 import { levelFromXp, todaysTasks } from '../game/rules'
 import './screens.css'
 
-function mood(todo: number, done: number) {
+function caption(todo: number, done: number) {
   if (done === 0 && todo === 0) return 'Flotte tranquillement. Attend la suite.'
   if (todo === 0) return 'Rayonne. Journée bouclée.'
   if (done === 0) return 'T’observe, l’air de rien.'
   return 'Prend des forces. Continue comme ça.'
 }
 
+function eggCaption(tasksDone: number) {
+  const left = HATCH_AFTER_TASKS - tasksDone
+  if (left <= 0) return 'Il est prêt.'
+  if (tasksDone === 0) return `Il éclora après ${HATCH_AFTER_TASKS} tâches. Coche la première.`
+  return `Ça craque. Encore ${left} tâche${left > 1 ? 's' : ''}.`
+}
+
 export function Home() {
-  const { state, openSheet } = useGame()
+  const { state, openSheet, pulse } = useGame()
+  const form = currentForm(state.creature)
   const { level, xpInLevel, xpToNext } = levelFromXp(state.player.xp)
   const { todo, done } = todaysTasks(state)
+  const mood: Mood = done.length > 0 && todo.length === 0 ? 'happy' : 'idle'
+  const name = formName(form.stage, form.branch)
 
   return (
     <div className="stack">
@@ -32,11 +43,24 @@ export function Home() {
       </div>
 
       <div className="nest-stage">
-        <Orb size={150} />
+        <Creature
+          stage={form.stage}
+          branch={form.branch}
+          seed={state.creature.seed}
+          eggProgress={state.player.tasksDone}
+          mood={mood}
+          pulseKey={pulse}
+          size={180}
+          label={name}
+        />
         <div className="nest-ground" />
         <div className="creature-name">
-          <h2>Étincelle</h2>
-          <p className="muted">{mood(todo.length, done.length)}</p>
+          <h2>{name}</h2>
+          <p className="muted">
+            {form.stage === 0
+              ? eggCaption(state.player.tasksDone)
+              : caption(todo.length, done.length)}
+          </p>
         </div>
       </div>
 

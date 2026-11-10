@@ -1,4 +1,6 @@
-import { Orb } from '../components/Orb'
+import { Creature } from '../components/Creature'
+import { formName } from '../game/creature'
+import type { Category, Stage } from '../game/types'
 import {
   Button,
   Card,
@@ -23,6 +25,8 @@ const colors = [
   ['Rare', '--rarity-rare'],
   ['Légendaire', '--rarity-legendary'],
 ]
+
+const branches: Category[] = ['body', 'mind', 'create', 'order']
 
 export function DesignSystem() {
   return (
@@ -89,9 +93,34 @@ export function DesignSystem() {
         </div>
       </Card>
 
-      <h2 className="section-title">Compagnon (provisoire)</h2>
-      <Card>
-        <Orb size={140} />
+      <h2 className="section-title">Compagnon</h2>
+      <Card className="stack">
+        <div className="creature-row">
+          {[0, 1, 2, 3].map((p) => (
+            <figure key={p} className="creature-cell">
+              <Creature stage={0} branch={null} eggProgress={p} size={92} />
+              <figcaption>Œuf {p}/3</figcaption>
+            </figure>
+          ))}
+        </div>
+        <div className="creature-row">
+          {(['idle', 'happy', 'sleep'] as const).map((m) => (
+            <figure key={m} className="creature-cell">
+              <Creature stage={1} branch={null} mood={m} size={92} />
+              <figcaption>Étincelle · {m === 'idle' ? 'calme' : m === 'happy' ? 'contente' : 'endormie'}</figcaption>
+            </figure>
+          ))}
+        </div>
+        {branches.map((b) => (
+          <div className="creature-row" key={b}>
+            {([2, 3, 4] as Stage[]).map((st) => (
+              <figure key={st} className="creature-cell">
+                <Creature stage={st} branch={b} seed={7} size={92} />
+                <figcaption>{formName(st, b)}</figcaption>
+              </figure>
+            ))}
+          </div>
+        ))}
       </Card>
     </div>
   )

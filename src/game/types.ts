@@ -22,8 +22,26 @@ export interface Player {
   byCategory: Record<Category, number>
 }
 
+/** 0 = egg, 1 = Étincelle, 2 and 3 = intermediate forms, 4 = final form. */
+export type Stage = 0 | 1 | 2 | 3 | 4
+
+export interface Evolution {
+  stage: Stage
+  /** Branch taken at this stage; null for the hatchling. */
+  branch: Category | null
+  at: string // ISO timestamp
+}
+
+export interface Creature {
+  /** Drives small per-creature variations (tint, ornament angles). */
+  seed: number
+  /** One entry per stage reached, starting with the hatching. Empty = still an egg. */
+  history: Evolution[]
+}
+
 export interface GameState {
   version: 1
   player: Player
+  creature: Creature
   tasks: Task[]
 }

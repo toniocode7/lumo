@@ -253,3 +253,37 @@
   text-align: right;
   color: var(--text-2);
 }
+
+.creature-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: var(--space-2);
+}
+
+.creature-cell {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.evo-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evo-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.evo-list .creature {
+  margin: 0;
+}

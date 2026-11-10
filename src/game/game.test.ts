@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { initialState, reducer } from './reducer'
 import { dayKey, isForToday, levelFromXp, todaysTasks, xpForLevel } from './rules'
 import { loadState, normalize, saveState } from './storage'
+import { currentForm, dominantCategory } from './creature'
 import type { GameState } from './types'
 
 const monday9am = new Date(2026, 10, 9, 9, 0) // Mon 9 Nov 2026
@@ -98,5 +99,51 @@ describe('storage', () => {
     expect(s.player.coins).toBe(0)
     expect(s.player.byCategory.body).toBe(0)
     expect(s.tasks).toEqual([])
+  })
+})
+
+describe('creature', () => {
+  const doTasks = (n: number, category: 'body' | 'mind' = 'mind', size: 's' | 'l' = 's') => {
+    let s = initialState
+    for (let i = 0; i < n; i++) {
+      s = reducer(s, {
+        type: 'add',
+        id: `t${i}`,
+        now: monday9am,
+        task: { title: `T${i}`, size, category, repeat: 'once' },
+      })
+      s = reducer(s, { type: 'complete', id: `t${i}`, now: monday9am })
+    }
+    return s
+  }
+
+  it('hatches after the third task', () => {
+    expect(currentForm(doTasks(2).creature).stage).toBe(0)
+    expect(currentForm(doTasks(3).creature)).toEqual({ stage: 1, branch: null })
+  })
+
+  it('evolves at level 5 into the dominant branch', () => {
+    // 12 big Corps tasks = 600 XP, past level 5.
+    const s = doTasks(12, 'body', 'l')
+    expect(levelFromXp(s.player.xp).level).toBeGreaterThanOrEqual(5)
+    expect(currentForm(s.creature)).toEqual({ stage: 2, branch: 'body' })
+    expect(s.creature.history.map((e) => e.stage)).toEqual([1, 2])
+  })
+
+  it('never goes back a stage when a task is unchecked', () => {
+    let s = doTasks(3)
+    s = reducer(s, { type: 'uncomplete', id: 't2', now: monday9am })
+    expect(s.player.tasksDone).toBe(2)
+    expect(currentForm(s.creature).stage).toBe(1)
+  })
+
+  it('breaks ties in favour of the task just done', () => {
+    expect(dominantCategory({ body: 2, mind: 2, create: 0, order: 0 }, 'mind')).toBe('mind')
+    expect(dominantCategory({ body: 3, mind: 2, create: 0, order: 0 }, 'mind')).toBe('body')
+  })
+
+  it('gives old saves a creature that matches their progress', () => {
+    const s = normalize({ player: { xp: 30, tasksDone: 4 } })
+    expect(currentForm(s.creature).stage).toBe(1)
   })
 })

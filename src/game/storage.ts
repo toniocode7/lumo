@@ -1,3 +1,4 @@
+import { advanceCreature, newSeed } from './creature'
 import { initialState } from './reducer'
 import type { GameState } from './types'
 
@@ -36,13 +37,19 @@ function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<
 /** Fills in fields missing from older or partial saves. */
 export function normalize(raw: unknown): GameState {
   const s = (raw ?? {}) as Partial<GameState>
+  const player = {
+    ...initialState.player,
+    ...s.player,
+    byCategory: { ...initialState.player.byCategory, ...s.player?.byCategory },
+  }
+  // Saves from before the creature existed get one that matches their progress.
+  const creature = s.creature?.history
+    ? s.creature
+    : advanceCreature({ seed: newSeed(), history: [] }, player, new Date())
   return {
     version: 1,
-    player: {
-      ...initialState.player,
-      ...s.player,
-      byCategory: { ...initialState.player.byCategory, ...s.player?.byCategory },
-    },
+    player,
+    creature,
     tasks: Array.isArray(s.tasks) ? s.tasks : [],
   }
 }
@@ -50,9 +57,9 @@ export function normalize(raw: unknown): GameState {
 export async function loadState(): Promise<GameState> {
   try {
     const raw = await tx('readonly', (s) => s.get(KEY))
-    return raw ? normalize(raw) : initialState
+    return normalize(raw ?? { creature: { seed: newSeed(), history: [] } })
   } catch {
-    return initialState
+    return normalize({ creature: { seed: newSeed(), history: [] } })
   }
 }
 

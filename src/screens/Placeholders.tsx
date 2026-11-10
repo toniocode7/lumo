@@ -24,7 +24,7 @@ export function Expedition() {
         <EmptyState
           icon="compass"
           title="Sac pas encore bouclé"
-          text="15, 25 ou 45 minutes : plus c'est long, plus le butin a de l'allure."
+          text="15, 25 ou 45 minutes : plus c'est long, plus le butin a de l'allure."
         />
       </Card>
     </>
@@ -39,7 +39,7 @@ export function Nest() {
         <EmptyState
           icon="nest"
           title="Boutique fermée pour travaux"
-          text="Plantes, lumières, pierres : ça arrive. Garde tes pièces au chaud."
+          text="Plantes, lumières, pierres : ça arrive. Garde tes pièces au chaud."
         />
       </Card>
     </>

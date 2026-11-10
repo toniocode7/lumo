@@ -1,3 +1,4 @@
+import { advanceCreature } from './creature'
 import { REWARDS, dayKey } from './rules'
 import type { Category, GameState, Repeat, Size } from './types'
 
@@ -18,6 +19,7 @@ export const initialState: GameState = {
     tasksDone: 0,
     byCategory: { body: 0, mind: 0, create: 0, order: 0 },
   },
+  creature: { seed: 1, history: [] },
   tasks: [],
 }
 
@@ -53,17 +55,22 @@ export function reducer(state: GameState, action: Action): GameState {
       const sign = action.type === 'complete' ? 1 : -1
       const r = REWARDS[task.size]
       const p = state.player
+      const player = {
+        xp: Math.max(0, p.xp + sign * r.xp),
+        coins: Math.max(0, p.coins + sign * r.coins),
+        tasksDone: Math.max(0, p.tasksDone + sign),
+        byCategory: {
+          ...p.byCategory,
+          [task.category]: Math.max(0, p.byCategory[task.category] + sign),
+        },
+      }
       return {
         ...state,
-        player: {
-          xp: Math.max(0, p.xp + sign * r.xp),
-          coins: Math.max(0, p.coins + sign * r.coins),
-          tasksDone: Math.max(0, p.tasksDone + sign),
-          byCategory: {
-            ...p.byCategory,
-            [task.category]: Math.max(0, p.byCategory[task.category] + sign),
-          },
-        },
+        player,
+        creature:
+          sign > 0
+            ? advanceCreature(state.creature, player, action.now, task.category)
+            : state.creature,
         tasks: state.tasks.map((t) =>
           t.id !== task.id
             ? t
