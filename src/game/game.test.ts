@@ -8,6 +8,7 @@ import { drawDaily, pickChallenge, rollRarity } from './cards'
 import { CHALLENGES, getChallenge } from './challenges'
 import { ITEMS, getItem, pickLegendaryItem } from './items'
 import { computeLoot, progress, remainingMs } from './expedition'
+import { addDays, streakInfo, weekOf } from './streak'
 import type { GameState, Rarity } from './types'
 
 const monday9am = new Date(2026, 10, 9, 9, 0) // Mon 9 Nov 2026
@@ -275,5 +276,71 @@ describe('expeditions', () => {
     expect(s.player).toMatchObject({ xp: 40, expeditionsDone: 1, focusMinutes: 25 })
     expect(s.inventory).toHaveLength(1)
     expect(reducer(s, { type: 'finishExpedition', loot, now: start })).toBe(s)
+  })
+})
+
+describe('streak', () => {
+  // Mon 2 Nov 2026 … Sun 15 Nov 2026
+  const d = (n: number) => `2026-11-${String(n).padStart(2, '0')}`
+
+  it('counts consecutive days and keeps today pending', () => {
+    expect(streakInfo([d(2), d(3), d(4)], d(4))).toMatchObject({ current: 3, todayActive: true, atRisk: false })
+    expect(streakInfo([d(2), d(3), d(4)], d(5))).toMatchObject({ current: 3, todayActive: false, atRisk: true })
+  })
+
+  it('lets the weekly joker cover one missed day', () => {
+    const s = streakInfo([d(2), d(3), d(5)], d(5))
+    expect(s.current).toBe(3) // the joker day bridges but doesn't count
+    expect(s.jokerDays).toEqual([d(4)])
+    expect(s.jokerAvailable).toBe(false)
+  })
+
+  it('resets after a second missed day in the same week', () => {
+    const s = streakInfo([d(2), d(4), d(6)], d(6))
+    expect(s.jokerDays).toEqual([d(3)])
+    expect(s.current).toBe(1)
+    expect(s.best).toBe(2)
+  })
+
+  it('gives a new joker each week (weeks start on Monday)', () => {
+    const s = streakInfo([d(5), d(7), d(8), d(10)], d(10))
+    expect(s.jokerDays).toEqual([d(6), d(9)])
+    expect(s.current).toBe(4)
+  })
+
+  it('refunds the joker and resets when two days in a row are missed', () => {
+    const s = streakInfo([d(2), d(3)], d(6))
+    expect(s.current).toBe(0)
+    expect(s.jokerDays).toEqual([])
+    expect(s.jokerAvailable).toBe(true)
+    expect(s.sleeping).toBe(true)
+  })
+
+  it('sleeps only after two full days without activity, and wakes on activity', () => {
+    expect(streakInfo([d(2)], d(4)).sleeping).toBe(false)
+    expect(streakInfo([d(2)], d(5)).sleeping).toBe(true)
+    expect(streakInfo([d(2), d(5)], d(5)).sleeping).toBe(false)
+    expect(streakInfo([], d(5)).sleeping).toBe(false) // brand-new player
+  })
+
+  it('handles month and week boundaries', () => {
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01')
+    expect(weekOf('2026-11-08')).toBe('2026-11-02') // Sunday belongs to the week of Monday 2
+    expect(weekOf('2026-11-09')).toBe('2026-11-09')
+  })
+
+  it('records activity from tasks and cards, and removes it when unchecked', () => {
+    let s = add(initialState, 'a')
+    s = reducer(s, { type: 'complete', id: 'a', now: monday9am })
+    expect(s.activeDays).toEqual(['2026-11-09'])
+    s = reducer(s, { type: 'uncomplete', id: 'a', now: monday9am })
+    expect(s.activeDays).toEqual([])
+  })
+
+  it('rebuilds activity for old saves', () => {
+    const s = normalize({
+      tasks: [{ id: 'x', title: 'X', size: 's', category: 'mind', repeat: 'daily', createdAt: '', completions: [d(3), d(2)] }],
+    })
+    expect(s.activeDays).toEqual([d(2), d(3)])
   })
 })

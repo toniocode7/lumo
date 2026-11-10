@@ -17,6 +17,7 @@ import { cardDoneMessage, doneMessage, levelUpMessage } from './messages'
 import { initialState, reducer, type Action, type NewTask } from './reducer'
 import { REWARDS, dayKey, levelFromXp } from './rules'
 import { loadState, saveState } from './storage'
+import { streakInfo, type StreakInfo } from './streak'
 import type { Category, GameState, Stage } from './types'
 
 export type Form = { stage: Stage; branch: Category | null }
@@ -31,6 +32,7 @@ export type Toast = {
 
 type Game = {
   state: GameState
+  streak: StreakInfo
   ready: boolean
   addTask: (t: NewTask) => void
   completeTask: (id: string) => void
@@ -136,7 +138,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (to.stage > from.stage) setEvolution({ from, to })
       const oldLevel = levelFromXp(before.player.xp).level
       const newLevel = levelFromXp(after.player.xp).level
-      const m = message(after)
+      const today = dayKey()
+      const woke =
+        streakInfo(before.activeDays, today).sleeping && !streakInfo(after.activeDays, today).sleeping
+      const m = woke
+        ? { text: 'Ton compagnon se réveille, la brume se lève. Content de te revoir.', important: true }
+        : message(after)
       show(
         newLevel > oldLevel && !m.important
           ? { text: levelUpMessage(newLevel), tone: 'gold', undo: () => restoreTo(before) }
@@ -236,9 +243,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (to.stage > from.stage) setEvolution({ from, to })
   }, [])
 
+  const today = dayKey()
+  const streak = useMemo(() => streakInfo(state.activeDays, today), [state.activeDays, today])
+
   const value = useMemo<Game>(
     () => ({
       state,
+      streak,
       ready,
       addTask,
       completeTask,
@@ -262,6 +273,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      streak,
       ready,
       addTask,
       completeTask,

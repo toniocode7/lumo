@@ -3,7 +3,7 @@ const done = [
   'Tâche réglée. Ton compagnon a pris {xp} XP et un peu d’assurance.',
   'Et une de moins. {xp} XP dans la besace.',
   'Propre. Ton compagnon brille un peu plus fort.',
-  'C’est fait, et ça se voit : +{xp} XP.',
+  'C’est fait, et ça se voit\u00a0: +{xp} XP.',
   'Cochée. Ton compagnon fait semblant de ne pas être impressionné.',
   'Bien joué. {coins} pièces de plus pour le nid.',
 ]

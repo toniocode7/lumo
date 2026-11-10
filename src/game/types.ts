@@ -69,6 +69,8 @@ export interface GameState {
   tasks: Task[]
   daily: Daily | null
   expedition: Expedition | null
+  /** Game days with at least one task or card done (drives the streak). */
+  activeDays: string[]
   /** Item ids the player owns (duplicates allowed). */
   inventory: string[]
 }

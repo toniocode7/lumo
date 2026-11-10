@@ -18,7 +18,7 @@ npm test   # règles du jeu et sauvegarde
 - [x] 3. Créature en SVG
 - [x] 4. Cartes du jour
 - [x] 5. Expéditions
-- [ ] 6. Série, joker et conséquence douce
+- [x] 6. Série, joker et conséquence douce
 - [ ] 7. Nid et boutique
 - [ ] 8. Le « jus »
 - [ ] 9. PWA et mise en ligne

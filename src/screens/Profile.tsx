@@ -5,6 +5,8 @@ import { Card, ScreenHeader, categoryLabel } from '../components/ui'
 import { Creature } from '../components/Creature'
 import { EVOLVE_AT, formName } from '../game/creature'
 import { useGame } from '../game/store'
+import { dayKey } from '../game/rules'
+import { addDays } from '../game/streak'
 import type { Category } from '../game/types'
 import { useThemeContext } from '../themeContext'
 import './screens.css'
@@ -13,7 +15,31 @@ const categories: Category[] = ['body', 'mind', 'create', 'order']
 
 export function Profile() {
   const { theme, setTheme } = useThemeContext()
-  const { player, creature } = useGame().state
+  const { state, streak } = useGame()
+  const { player, creature } = state
+  const today = dayKey()
+  const first = state.activeDays[0]
+  const strip = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13)).map((d) => ({
+    day: d,
+    kind: state.activeDays.includes(d)
+      ? 'active'
+      : streak.jokerDays.includes(d)
+        ? 'joker'
+        : d === today
+          ? 'today'
+          : first && d > first
+            ? 'missed'
+            : 'none',
+  }))
+  const weekday = new Intl.DateTimeFormat('fr-FR', { weekday: 'narrow' })
+  const longDate = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const kindLabel: Record<string, string> = {
+    active: 'actif',
+    joker: 'sauvé par le joker',
+    today: 'aujourd’hui, rien encore',
+    missed: 'jour manqué',
+    none: 'avant tes débuts',
+  }
   const dateFmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' })
   const max = Math.max(1, ...categories.map((c) => player.byCategory[c]))
 
@@ -39,6 +65,41 @@ export function Profile() {
           <small>minutes de concentration</small>
         </Card>
       </div>
+
+      <h2 className="section-title">Série</h2>
+      <Card className="stack">
+        <div className="streak-head">
+          <div>
+            <span className="num streak-big">{streak.current}</span>
+            <small className="muted"> jour{streak.current > 1 ? 's' : ''} d’affilée</small>
+          </div>
+          <div className="streak-side muted">
+            <span>Record&nbsp;: <strong className="num">{streak.best}</strong></span>
+            <span className={`joker-pill ${streak.jokerAvailable ? 'on' : ''}`}>
+              {streak.jokerAvailable ? 'Joker dispo' : 'Joker utilisé'}
+            </span>
+          </div>
+        </div>
+        <ol className="strip" aria-label="Les 14 derniers jours">
+          {strip.map(({ day, kind }) => {
+            const date = new Date(`${day}T12:00:00`)
+            return (
+              <li key={day} className={`strip-day ${kind}`} title={`${longDate.format(date)}\u00a0: ${kindLabel[kind]}`}>
+                <span className="strip-dot" />
+                <span className="strip-label">{weekday.format(date)}</span>
+                <span className="sr-only">
+                  {longDate.format(date)}&nbsp;: {kindLabel[kind]}
+                </span>
+              </li>
+            )
+          })}
+        </ol>
+        <p className="muted" style={{ fontSize: 13 }}>
+          Une tâche ou une carte par jour fait avancer la série. Un joker par semaine couvre un
+          jour manqué, tout seul. Deux jours sans rien et ton compagnon s’endort&nbsp;: il se réveille
+          dès que tu reviens, sans rien perdre.
+        </p>
+      </Card>
 
       <h2 className="section-title">Répartition</h2>
       <Card className="stack">

@@ -3,6 +3,7 @@ import { getChallenge } from './challenges'
 import { advanceCreature } from './creature'
 import type { Duration, Loot } from './expedition'
 import { REWARDS, dayKey } from './rules'
+import { hadActivity } from './streak'
 import type { Category, Daily, GameState, Repeat, Size } from './types'
 
 export type NewTask = { title: string; size: Size; category: Category; repeat: Repeat }
@@ -35,8 +36,12 @@ export const initialState: GameState = {
   tasks: [],
   daily: null,
   expedition: null,
+  activeDays: [],
   inventory: [],
 }
+
+const markActive = (days: string[], day: string) =>
+  days.includes(day) ? days : [...days, day].sort()
 
 function updateCard(state: GameState, index: number, patch: Partial<Daily['cards'][number]>): GameState {
   if (!state.daily?.cards[index]) return state
@@ -91,7 +96,7 @@ export function reducer(state: GameState, action: Action): GameState {
           [task.category]: Math.max(0, p.byCategory[task.category] + sign),
         },
       }
-      return {
+      const next: GameState = {
         ...state,
         player,
         creature:
@@ -108,6 +113,14 @@ export function reducer(state: GameState, action: Action): GameState {
               },
         ),
       }
+      // Unchecking the day's only activity takes the day back out of the streak.
+      const activeDays =
+        sign > 0
+          ? markActive(state.activeDays, today)
+          : hadActivity(next, today)
+            ? state.activeDays
+            : state.activeDays.filter((d) => d !== today)
+      return { ...next, activeDays }
     }
 
     case 'delete':
@@ -154,6 +167,7 @@ export function reducer(state: GameState, action: Action): GameState {
         creature: advanceCreature(state.creature, player, action.now, challenge.category),
         inventory: itemId ? [...state.inventory, itemId] : state.inventory,
         daily: { ...next.daily!, bonusClaimed: next.daily!.bonusClaimed || bonus },
+        activeDays: markActive(state.activeDays, dayKey(action.now)),
       }
       return next
     }

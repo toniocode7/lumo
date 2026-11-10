@@ -25,11 +25,15 @@ function eggCaption(tasksDone: number) {
 }
 
 export function Home() {
-  const { state, openSheet, pulse } = useGame()
+  const { state, openSheet, pulse, streak } = useGame()
   const form = currentForm(state.creature)
   const { level, xpInLevel, xpToNext } = levelFromXp(state.player.xp)
   const { todo, done } = todaysTasks(state)
-  const mood: Mood = done.length > 0 && todo.length === 0 ? 'happy' : 'idle'
+  const mood: Mood = streak.sleeping
+    ? 'sleep'
+    : done.length > 0 && todo.length === 0
+      ? 'happy'
+      : 'idle'
   const name = formName(form.stage, form.branch)
   const exp = state.expedition
   const now = useNow(!!exp)
@@ -51,6 +55,12 @@ export function Home() {
     <div className="stack">
       <div className="row between">
         <div className="row">
+          <Stat
+            icon="flame"
+            value={streak.current}
+            label={`Série de ${streak.current} jour${streak.current > 1 ? 's' : ''}`}
+            tone={streak.atRisk ? 'coral' : 'accent'}
+          />
           <Stat icon="coin" value={state.player.coins} label="Pièces" tone="gold" />
           <Stat icon="spark" value={`Niv. ${level}`} label="Niveau" />
         </div>
@@ -59,7 +69,7 @@ export function Home() {
         </Link>
       </div>
 
-      <div className="nest-stage">
+      <div className={`nest-stage ${streak.sleeping && !exp ? 'is-misty' : ''}`}>
         {exp ? (
           <Link to="/expedition" className="away" aria-label="Voir l’expédition">
             <span className="away-icon">
@@ -86,7 +96,9 @@ export function Home() {
               ? expLeft === 0
                 ? 'Rentré de voyage. Va voir ce qu’il rapporte.'
                 : `Parti explorer. Retour dans ${formatClock(expLeft)}.`
-              : form.stage === 0
+              : streak.sleeping
+                ? 'Il dort sous la brume. Une tâche ou une carte suffit pour le réveiller.'
+                : form.stage === 0
               ? eggCaption(state.player.tasksDone)
               : caption(todo.length, done.length)}
           </p>
@@ -104,6 +116,21 @@ export function Home() {
         </div>
         <ProgressBar value={xpInLevel} max={xpToNext} label="Progression du niveau" />
       </Card>
+
+      {streak.atRisk && (
+        <div className="streak-note" role="status">
+          <span className="streak-note-icon">
+            <Icon name="flame" size={18} />
+          </span>
+          <p>
+            <strong>
+              Série de {streak.current} jour{streak.current > 1 ? 's' : ''} en jeu.
+            </strong>{' '}
+            Une tâche ou une carte aujourd’hui suffit.
+            {streak.jokerAvailable && ' Et ton joker de la semaine couvre un oubli.'}
+          </p>
+        </div>
+      )}
 
       {todo.length > 0 ? (
         <section>

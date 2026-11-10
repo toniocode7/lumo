@@ -1,5 +1,6 @@
 import { advanceCreature, newSeed } from './creature'
 import { initialState } from './reducer'
+import { activityFromHistory } from './streak'
 import type { GameState } from './types'
 
 // Minimal IndexedDB key-value store: the whole game state is one record.
@@ -46,15 +47,19 @@ export function normalize(raw: unknown): GameState {
   const creature = s.creature?.history
     ? s.creature
     : advanceCreature({ seed: newSeed(), history: [] }, player, new Date())
-  return {
+  const state: GameState = {
     version: 1,
     player,
     creature,
     tasks: Array.isArray(s.tasks) ? s.tasks : [],
     daily: s.daily ?? null,
     expedition: s.expedition ?? null,
+    activeDays: [],
     inventory: Array.isArray(s.inventory) ? s.inventory : [],
   }
+  // Saves from before the streak existed rebuild it from completed tasks and cards.
+  state.activeDays = Array.isArray(s.activeDays) ? s.activeDays : activityFromHistory(state)
+  return state
 }
 
 export async function loadState(): Promise<GameState> {
