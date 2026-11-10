@@ -1,0 +1,68 @@
+.item-art {
+  overflow: visible;
+}
+
+.item-art .art-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: art-glow 4s ease-in-out infinite;
+}
+
+.item-art .art-twinkle {
+  animation: art-twinkle 2.4s ease-in-out infinite;
+}
+
+.item-art .art-drift {
+  animation: art-drift 5s ease-in-out infinite;
+}
+
+@keyframes art-glow {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+
+@keyframes art-twinkle {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes art-drift {
+  50% {
+    transform: translate(2px, -4px);
+  }
+}
+
+/* Backdrops: used for the nest and for shop swatches */
+.backdrop-swatch {
+  display: block;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--border);
+}
+
+.backdrop-night {
+  background:
+    radial-gradient(70% 60% at 50% 38%, rgb(79 209 197 / 0.1), transparent 70%),
+    var(--surface);
+}
+
+.backdrop-dawn {
+  background:
+    radial-gradient(60% 45% at 50% 42%, rgb(255 190 150 / 0.4), transparent 70%),
+    linear-gradient(180deg, #2a2440 0%, #5a3e62 60%, #7a4a66 100%);
+}
+
+.backdrop-dusk {
+  background:
+    radial-gradient(60% 40% at 70% 85%, rgb(255 160 90 / 0.45), transparent 70%),
+    linear-gradient(180deg, #131a33 0%, #3b2a5c 50%, #8a4a6a 100%);
+}
+
+.backdrop-aurora {
+  background:
+    radial-gradient(90% 30% at 30% 25%, rgb(79 209 160 / 0.45), transparent 70%),
+    radial-gradient(80% 25% at 70% 35%, rgb(167 139 250 / 0.4), transparent 70%),
+    linear-gradient(180deg, #08121d 0%, #0f1c2c 60%, #172a3a 100%);
+}

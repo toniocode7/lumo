@@ -1,0 +1,36 @@
+.fx-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.fx-float {
+  position: fixed;
+  z-index: 61;
+  transform: translate(-50%, 0);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 12px currentColor;
+  animation: fx-float 1100ms var(--ease-out) forwards;
+}
+
+@keyframes fx-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -14px) scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -54px) scale(1);
+  }
+}

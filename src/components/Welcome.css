@@ -1,0 +1,106 @@
+.welcome {
+  position: fixed;
+  z-index: 55;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--space-6) + env(safe-area-inset-top)) var(--space-5)
+    calc(var(--space-6) + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(60% 45% at 50% 35%, rgb(79 209 197 / 0.14), transparent 70%),
+    var(--bg);
+  overflow-y: auto;
+}
+
+.welcome-skip {
+  position: absolute;
+  top: calc(var(--space-4) + env(safe-area-inset-top));
+  right: var(--space-4);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.welcome-body {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  animation: welcome-in 450ms var(--ease-out) both;
+}
+
+.welcome-body h1 {
+  font-size: 30px;
+}
+
+.welcome-body p {
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.welcome-icon {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  margin-bottom: var(--space-3);
+  border-radius: 32px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  box-shadow: 0 0 60px rgb(79 209 197 / 0.25);
+}
+
+.welcome-egg {
+  animation: welcome-egg 900ms var(--ease-out) both;
+}
+
+.welcome-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--space-2);
+}
+
+.welcome-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  transition:
+    width var(--dur) var(--ease-out),
+    background-color var(--dur);
+}
+
+.welcome-dots span.on {
+  width: 24px;
+  background: var(--accent);
+}
+
+.welcome-actions {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-3);
+}
+
+@keyframes welcome-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes welcome-egg {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.7);
+  }
+  60% {
+    transform: translateY(6px) scale(1.04);
+  }
+}

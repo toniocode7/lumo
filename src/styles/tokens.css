@@ -1,0 +1,90 @@
+/* Design tokens. Dark is the default; light is opt-in via data-theme. */
+:root {
+  /* Surfaces */
+  --bg: #11131a;
+  --bg-deep: #0b0d12;
+  --surface: #1b1e29;
+  --surface-2: #232736;
+  --border: #2a2e3d;
+
+  /* Text */
+  --text: #eceef4;
+  --text-2: #9aa0b4;
+  --text-3: #6b7186;
+
+  /* Accents: fill colors, readable text versions, and ink to put on top */
+  --accent: #4fd1c5;
+  --accent-text: #4fd1c5;
+  --accent-ink: #0b1f1d;
+  --accent-soft: rgb(79 209 197 / 0.14);
+  --gold: #f5b544;
+  --gold-text: #f5b544;
+  --gold-soft: rgb(245 181 68 / 0.14);
+  --coral: #ff7a6b;
+  --coral-text: #ff7a6b;
+  --coral-soft: rgb(255 122 107 / 0.14);
+
+  /* Rarities */
+  --rarity-common: #c7cbd6;
+  --rarity-rare: #5b8def;
+  --rarity-legendary: #a78bfa;
+
+  /* Task categories (also creature branches) */
+  --cat-body: #f2995a;
+  --cat-mind: #6fa8ff;
+  --cat-create: #b18cff;
+  --cat-order: #4fd1c5;
+
+  /* Type */
+  --font-display: 'Space Grotesk Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
+
+  /* Space, radius, shadow */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-s: 10px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+  --shadow: 0 8px 32px rgb(0 0 0 / 0.35);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur: 260ms;
+
+  --tabbar-h: 68px;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f3f4f8;
+  --bg-deep: #e7e9f0;
+  --surface: #ffffff;
+  --surface-2: #f0f1f6;
+  --border: #dcdfe8;
+
+  --text: #161925;
+  --text-2: #565c71;
+  --text-3: #8a8fa1;
+
+  --accent: #4fd1c5;
+  --accent-text: #137f76;
+  --accent-ink: #0b1f1d;
+  --accent-soft: rgb(79 209 197 / 0.18);
+  --gold: #f5b544;
+  --gold-text: #9a6511;
+  --gold-soft: rgb(245 181 68 / 0.2);
+  --coral: #ff7a6b;
+  --coral-text: #c2402f;
+  --coral-soft: rgb(255 122 107 / 0.16);
+
+  --rarity-common: #8a8fa1;
+
+  --shadow: 0 8px 28px rgb(22 25 37 / 0.08);
+  color-scheme: light;
+}

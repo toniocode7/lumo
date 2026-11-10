@@ -1,0 +1,193 @@
+.creature {
+  margin: 0 auto;
+  flex: none;
+}
+
+.creature svg {
+  overflow: visible;
+}
+
+/* Animated parts move around the centre of the 200 x 200 drawing.
+   Only set on animated classes: transform-origin also shifts SVG transform attributes. */
+.cr-float,
+.cr-halo,
+.cr-spin,
+.cr-spin-rev,
+.cr-sway {
+  transform-origin: 100px 100px;
+}
+
+.cr-float {
+  animation: cr-float 5s ease-in-out infinite;
+}
+.mood-happy .cr-float {
+  animation: cr-hop 1.6s ease-in-out infinite;
+}
+.mood-sleep .cr-float {
+  animation: cr-curl 7s ease-in-out infinite;
+}
+
+.cr-halo {
+  animation: cr-breathe 5s ease-in-out infinite;
+}
+.mood-happy .cr-halo {
+  animation-duration: 1.6s;
+}
+.mood-sleep .cr-halo {
+  animation-duration: 8s;
+}
+
+.cr-pulse {
+  animation:
+    cr-pulse 900ms var(--ease-out),
+    cr-breathe 5s ease-in-out 900ms infinite;
+}
+
+.creature .cr-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cr-blink 6s infinite;
+}
+
+.cr-spin {
+  animation: cr-spin 40s linear infinite;
+}
+.cr-spin-rev {
+  animation: cr-spin 60s linear infinite reverse;
+}
+
+.cr-sway {
+  animation: cr-sway 4s ease-in-out infinite;
+}
+
+.creature .cr-drift {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cr-drift 6s ease-in-out infinite;
+}
+
+.cr-twinkle circle {
+  animation: cr-twinkle 3s ease-in-out infinite;
+}
+.cr-twinkle circle:nth-child(2n) {
+  animation-delay: -1.5s;
+}
+
+.cr-mote {
+  animation: cr-mote 6s ease-in-out infinite;
+}
+
+.creature .cr-wobble {
+  transform-origin: 100px 166px;
+  animation: cr-wobble 4s ease-in-out infinite;
+}
+
+.cr-crack {
+  stroke-dasharray: 60;
+  animation: cr-crack 900ms var(--ease-out) both;
+  filter: drop-shadow(0 0 3px #bff3ee);
+}
+
+@keyframes cr-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes cr-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-10px) scale(1.04, 0.97);
+  }
+}
+@keyframes cr-curl {
+  50% {
+    transform: translateY(4px) scale(0.96);
+  }
+}
+@keyframes cr-breathe {
+  50% {
+    transform: scale(1.07);
+    opacity: 0.8;
+  }
+}
+@keyframes cr-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes cr-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes cr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes cr-sway {
+  50% {
+    transform: rotate(6deg);
+  }
+}
+@keyframes cr-drift {
+  50% {
+    transform: translateY(-5px) rotate(20deg);
+    opacity: 1;
+  }
+}
+@keyframes cr-twinkle {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes cr-mote {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+}
+@keyframes cr-wobble {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  76% {
+    transform: rotate(-4deg);
+  }
+  82% {
+    transform: rotate(3deg);
+  }
+  88% {
+    transform: rotate(-2deg);
+  }
+}
+@keyframes cr-crack {
+  from {
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
