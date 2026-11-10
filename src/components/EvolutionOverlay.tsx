@@ -55,7 +55,7 @@ export function EvolutionOverlay() {
             <p className="muted">
               {hatched
                 ? 'Trois tâches, et l’œuf a cédé. Prends-en soin : il grandit avec ce que tu fais.'
-                : `Branche ${to.branch ? categoryLabel[to.branch] : ''} : c’est ce que tu fais le plus qui l’a façonné.`}
+                : `Branche ${to.branch ? categoryLabel[to.branch] : ''}\u00a0: c’est ce que tu fais le plus qui l’a façonné.`}
             </p>
             <Button ref={button} onClick={dismissEvolution}>
               Continuer
