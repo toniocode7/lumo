@@ -14,6 +14,9 @@ const paths = {
   spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z',
   chevron: 'M9 6l6 6-6 6',
   check: 'M5 12.5l4.5 4.5L19 7.5',
+  trash: 'M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 11v5M13.5 11v5',
+  close: 'M6 6l12 12M18 6L6 18',
+  repeat: 'M17 3l3 3-3 3M20 6H8a4 4 0 0 0-4 4v1M7 21l-3-3 3-3M4 18h12a4 4 0 0 0 4-4v-1',
 } as const
 
 export type IconName = keyof typeof paths

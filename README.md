@@ -8,12 +8,13 @@ Le cahier des charges complet est dans [BRIEF.md](BRIEF.md).
 ```bash
 npm install
 npm run dev
+npm test   # règles du jeu et sauvegarde
 ```
 
 ## Avancement
 
 - [x] 1. Base du projet, design system et navigation
-- [ ] 2. Tâches, XP, pièces et sauvegarde locale
+- [x] 2. Tâches, XP, pièces et sauvegarde locale
 - [ ] 3. Créature en SVG
 - [ ] 4. Cartes du jour
 - [ ] 5. Expéditions

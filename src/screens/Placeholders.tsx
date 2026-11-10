@@ -1,23 +1,5 @@
-import { Button, Card, EmptyState, ScreenHeader } from '../components/ui'
+import { Card, EmptyState, ScreenHeader } from '../components/ui'
 import './screens.css'
-
-export function Tasks() {
-  return (
-    <>
-      <ScreenHeader title="Tâches" subtitle="Ce que tu as prévu aujourd'hui." />
-      <Card>
-        <EmptyState
-          icon="tasks"
-          title="Rien pour l'instant"
-          text="Ajoute une tâche. Même petite, elle compte."
-        />
-        <Button icon="plus" block>
-          Ajouter une tâche
-        </Button>
-      </Card>
-    </>
-  )
-}
 
 export function DailyCards() {
   return (

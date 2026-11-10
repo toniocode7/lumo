@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Icon, type IconName } from './Icon'
+import { TaskSheet } from './TaskSheet'
+import { ToastHost } from './Toast'
 import './Layout.css'
 
 type Tab = { to: string; label: string; icon: IconName; railOnly?: boolean }
@@ -40,6 +42,8 @@ export function Layout() {
       <main className="main">
         <Outlet />
       </main>
+      <ToastHost />
+      <TaskSheet />
     </div>
   )
 }

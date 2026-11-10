@@ -1,19 +1,30 @@
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Orb } from '../components/Orb'
+import { TaskRow } from '../components/TaskRow'
 import { Button, Card, ProgressBar, Stat } from '../components/ui'
+import { useGame } from '../game/store'
+import { levelFromXp, todaysTasks } from '../game/rules'
 import './screens.css'
 
-// Sample values until step 2 wires real data.
-const preview = { name: 'Étincelle', level: 3, xp: 140, xpNext: 220, coins: 86, streak: 4 }
+function mood(todo: number, done: number) {
+  if (done === 0 && todo === 0) return 'Flotte tranquillement. Attend la suite.'
+  if (todo === 0) return 'Rayonne. Journée bouclée.'
+  if (done === 0) return 'T’observe, l’air de rien.'
+  return 'Prend des forces. Continue comme ça.'
+}
 
 export function Home() {
+  const { state, openSheet } = useGame()
+  const { level, xpInLevel, xpToNext } = levelFromXp(state.player.xp)
+  const { todo, done } = todaysTasks(state)
+
   return (
     <div className="stack">
       <div className="row between">
         <div className="row">
-          <Stat icon="flame" value={preview.streak} label="Série" tone="coral" />
-          <Stat icon="coin" value={preview.coins} label="Pièces" tone="gold" />
+          <Stat icon="coin" value={state.player.coins} label="Pièces" tone="gold" />
+          <Stat icon="spark" value={`Niv. ${level}`} label="Niveau" />
         </div>
         <Link to="/profil" className="icon-btn mobile-only" aria-label="Profil">
           <Icon name="user" />
@@ -24,24 +35,40 @@ export function Home() {
         <Orb size={150} />
         <div className="nest-ground" />
         <div className="creature-name">
-          <h2>{preview.name}</h2>
-          <p className="muted">Flotte tranquillement. Attend la suite.</p>
+          <h2>Étincelle</h2>
+          <p className="muted">{mood(todo.length, done.length)}</p>
         </div>
       </div>
 
       <Card className="level-card">
         <div className="level-head">
           <span>
-            Niveau <span className="num">{preview.level}</span>
+            Niveau <span className="num">{level}</span>
           </span>
           <span className="num muted" style={{ fontSize: 14 }}>
-            {preview.xp} / {preview.xpNext} XP
+            {xpInLevel} / {xpToNext} XP
           </span>
         </div>
-        <ProgressBar value={preview.xp} max={preview.xpNext} label="Progression du niveau" />
+        <ProgressBar value={xpInLevel} max={xpToNext} label="Progression du niveau" />
       </Card>
 
-      <Button icon="plus" block>
+      {todo.length > 0 ? (
+        <section>
+          <div className="row between">
+            <h2 className="section-title">Aujourd’hui</h2>
+            <Link to="/taches" className="see-all">
+              Tout voir ({todo.length})
+            </Link>
+          </div>
+          <ul className="task-list">
+            {todo.slice(0, 3).map((t) => (
+              <TaskRow key={t.id} task={t} done={false} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <Button icon="plus" block onClick={openSheet}>
         Ajouter une tâche
       </Button>
 
@@ -52,7 +79,7 @@ export function Home() {
           </span>
           <span>
             <strong>Cartes du jour</strong>
-            <small>3 à retourner</small>
+            <small>Bientôt</small>
           </span>
         </Link>
         <Link to="/expedition" className="shortcut">
@@ -61,11 +88,10 @@ export function Home() {
           </span>
           <span>
             <strong>Expédition</strong>
-            <small>Prête à partir</small>
+            <small>Bientôt</small>
           </span>
         </Link>
       </div>
-
     </div>
   )
 }

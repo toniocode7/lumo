@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
+import type { Category } from '../game/types'
 import './ui.css'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'gold'
@@ -113,7 +114,6 @@ export function RarityChip({ rarity }: { rarity: Rarity }) {
   return <span className={`chip chip-${rarity}`}>{rarityLabel[rarity]}</span>
 }
 
-export type Category = 'body' | 'mind' | 'create' | 'order'
 export const categoryLabel: Record<Category, string> = {
   body: 'Corps',
   mind: 'Esprit',

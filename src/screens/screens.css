@@ -195,3 +195,61 @@
   font-weight: 600;
   line-height: 1;
 }
+
+.see-all {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+/* Profile */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.big-stat {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-4);
+}
+
+.big-stat .num {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.big-stat small {
+  color: var(--text-2);
+}
+
+.cat-bar {
+  display: grid;
+  grid-template-columns: 76px 1fr 32px;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 14px;
+}
+
+.cat-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.cat-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c);
+  transition: width 700ms var(--ease-out);
+}
+
+.cat-bar-value {
+  text-align: right;
+  color: var(--text-2);
+}
