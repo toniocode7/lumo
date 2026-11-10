@@ -19,6 +19,7 @@ export interface Player {
   xp: number // total XP ever earned
   coins: number
   tasksDone: number
+  cardsDone: number
   byCategory: Record<Category, number>
 }
 
@@ -39,9 +40,30 @@ export interface Creature {
   history: Evolution[]
 }
 
+export type Rarity = 'common' | 'rare' | 'legendary'
+
+export interface DailyCard {
+  challengeId: string
+  rarity: Rarity
+  revealed: boolean
+  done: boolean
+  /** Item found on a legendary card. */
+  itemId?: string
+}
+
+export interface Daily {
+  day: string // game day (YYYY-MM-DD) these cards belong to
+  cards: DailyCard[]
+  rerollUsed: boolean
+  bonusClaimed: boolean
+}
+
 export interface GameState {
   version: 1
   player: Player
   creature: Creature
   tasks: Task[]
+  daily: Daily | null
+  /** Item ids the player owns (duplicates allowed). */
+  inventory: string[]
 }

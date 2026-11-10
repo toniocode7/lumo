@@ -29,6 +29,17 @@ export function Home() {
   const { todo, done } = todaysTasks(state)
   const mood: Mood = done.length > 0 && todo.length === 0 ? 'happy' : 'idle'
   const name = formName(form.stage, form.branch)
+  const cards = state.daily?.cards ?? []
+  const cardsDone = cards.filter((c) => c.done).length
+  const cardsHidden = cards.filter((c) => !c.revealed).length
+  const cardsLabel =
+    cards.length === 0
+      ? 'Tirage en cours'
+      : cardsDone === cards.length
+        ? 'Toutes faites'
+        : cardsHidden > 0
+          ? `${cardsHidden} à retourner`
+          : `${cardsDone} sur ${cards.length} faites`
 
   return (
     <div className="stack">
@@ -103,7 +114,7 @@ export function Home() {
           </span>
           <span>
             <strong>Cartes du jour</strong>
-            <small>Bientôt</small>
+            <small>{cardsLabel}</small>
           </span>
         </Link>
         <Link to="/expedition" className="shortcut">

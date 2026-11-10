@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode, Ref } from 'react'
 import { Icon, type IconName } from './Icon'
-import type { Category } from '../game/types'
+import type { Category, Rarity } from '../game/types'
 import './ui.css'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'gold'
@@ -106,7 +106,6 @@ export function Stat({
   )
 }
 
-export type Rarity = 'common' | 'rare' | 'legendary'
 const rarityLabel: Record<Rarity, string> = {
   common: 'Commune',
   rare: 'Rare',

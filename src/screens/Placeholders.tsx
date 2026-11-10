@@ -1,21 +1,6 @@
 import { Card, EmptyState, ScreenHeader } from '../components/ui'
 import './screens.css'
 
-export function DailyCards() {
-  return (
-    <>
-      <ScreenHeader title="Cartes du jour" subtitle="Trois défis, face cachée. Nouveau tirage à 5 h." />
-      <Card>
-        <EmptyState
-          icon="cards"
-          title="Le paquet se mélange"
-          text="Les cartes arrivent bientôt. Garde un peu de place dans ta journée."
-        />
-      </Card>
-    </>
-  )
-}
-
 export function Expedition() {
   return (
     <>

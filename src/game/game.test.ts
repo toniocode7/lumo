@@ -4,7 +4,10 @@ import { initialState, reducer } from './reducer'
 import { dayKey, isForToday, levelFromXp, todaysTasks, xpForLevel } from './rules'
 import { loadState, normalize, saveState } from './storage'
 import { currentForm, dominantCategory } from './creature'
-import type { GameState } from './types'
+import { drawDaily, pickChallenge, rollRarity } from './cards'
+import { CHALLENGES, getChallenge } from './challenges'
+import { ITEMS, pickLegendaryItem } from './items'
+import type { GameState, Rarity } from './types'
 
 const monday9am = new Date(2026, 10, 9, 9, 0) // Mon 9 Nov 2026
 const add = (s: GameState, id: string, extra: Partial<Parameters<typeof reducer>[1]> = {}) =>
@@ -145,5 +148,85 @@ describe('creature', () => {
   it('gives old saves a creature that matches their progress', () => {
     const s = normalize({ player: { xp: 30, tasksDone: 4 } })
     expect(currentForm(s.creature).stage).toBe(1)
+  })
+})
+
+describe('daily cards', () => {
+  const seq = (...values: number[]) => {
+    let i = 0
+    return () => values[i++ % values.length]
+  }
+
+  it('rolls rarities at 70 / 25 / 5 %', () => {
+    expect(rollRarity(() => 0.01)).toBe('legendary')
+    expect(rollRarity(() => 0.2)).toBe('rare')
+    expect(rollRarity(() => 0.5)).toBe('common')
+    let n = 0
+    const rand = () => ((n = (n * 9301 + 49297) % 233280), n / 233280)
+    const counts = { common: 0, rare: 0, legendary: 0 }
+    for (let i = 0; i < 20000; i++) counts[rollRarity(rand)]++
+    expect(counts.legendary / 20000).toBeCloseTo(0.05, 1)
+    expect(counts.rare / 20000).toBeCloseTo(0.25, 1)
+  })
+
+  it('draws 3 different challenges from different categories', () => {
+    const d = drawDaily('2026-11-09', Math.random)
+    const ids = d.cards.map((c) => c.challengeId)
+    expect(new Set(ids).size).toBe(3)
+    const cats = ids.map((id) => getChallenge(id)!.category)
+    expect(new Set(cats).size).toBe(3)
+    expect(CHALLENGES.length).toBeGreaterThanOrEqual(60)
+  })
+
+  const withDaily = (rarities: Rarity[]): GameState => ({
+    ...initialState,
+    daily: {
+      day: '2026-11-09',
+      cards: rarities.map((rarity, i) => ({
+        challengeId: ['read10', 'tidy10', 'walk20'][i],
+        rarity,
+        revealed: false,
+        done: false,
+      })),
+      rerollUsed: false,
+      bonusClaimed: false,
+    },
+  })
+
+  it('multiplies rewards by rarity and gives legendary items', () => {
+    let s = withDaily(['rare', 'legendary', 'common'])
+    s = reducer(s, { type: 'completeCard', index: 0, now: monday9am })
+    expect(s.player).toMatchObject({ xp: 20, coins: 10, cardsDone: 1 }) // small x2
+    s = reducer(s, { type: 'completeCard', index: 1, now: monday9am, itemId: 'moonstone' })
+    expect(s.player.xp).toBe(50) // + small x3
+    expect(s.inventory).toEqual(['moonstone'])
+    s = reducer(s, { type: 'completeCard', index: 1, now: monday9am })
+    expect(s.player.cardsDone).toBe(2) // no double completion
+  })
+
+  it('pays the all-three bonus once', () => {
+    let s = withDaily(['common', 'common', 'common'])
+    for (const i of [0, 1, 2]) s = reducer(s, { type: 'completeCard', index: i, now: monday9am })
+    // 10 + 10 + 25 + bonus 30
+    expect(s.player.xp).toBe(75)
+    expect(s.daily!.bonusClaimed).toBe(true)
+  })
+
+  it('allows one reroll a day, keeping the rarity', () => {
+    let s = withDaily(['legendary', 'common', 'common'])
+    s = reducer(s, { type: 'rerollCard', index: 0, challengeId: 'bed' })
+    expect(s.daily!.cards[0]).toMatchObject({ challengeId: 'bed', rarity: 'legendary', revealed: true })
+    s = reducer(s, { type: 'rerollCard', index: 1, challengeId: 'dishes' })
+    expect(s.daily!.cards[1].challengeId).toBe('tidy10')
+  })
+
+  it('picks a reroll different from the cards already on the table', () => {
+    const id = pickChallenge(seq(0), ['read10', 'tidy10', 'walk20'])
+    expect(['read10', 'tidy10', 'walk20']).not.toContain(id)
+  })
+
+  it('prefers items the player does not own yet', () => {
+    const owned = ITEMS.slice(1).map((i) => i.id)
+    expect(pickLegendaryItem(owned, () => 0.9)).toBe(ITEMS[0].id)
   })
 })

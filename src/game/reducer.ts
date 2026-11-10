@@ -1,6 +1,8 @@
+import { ALL_DONE_BONUS, cardReward } from './cards'
+import { getChallenge } from './challenges'
 import { advanceCreature } from './creature'
 import { REWARDS, dayKey } from './rules'
-import type { Category, GameState, Repeat, Size } from './types'
+import type { Category, Daily, GameState, Repeat, Size } from './types'
 
 export type NewTask = { title: string; size: Size; category: Category; repeat: Repeat }
 
@@ -10,6 +12,10 @@ export type Action =
   | { type: 'uncomplete'; id: string; now: Date }
   | { type: 'delete'; id: string }
   | { type: 'restore'; state: GameState }
+  | { type: 'setDaily'; daily: Daily }
+  | { type: 'revealCard'; index: number }
+  | { type: 'rerollCard'; index: number; challengeId: string }
+  | { type: 'completeCard'; index: number; now: Date; itemId?: string }
 
 export const initialState: GameState = {
   version: 1,
@@ -17,10 +23,24 @@ export const initialState: GameState = {
     xp: 0,
     coins: 0,
     tasksDone: 0,
+    cardsDone: 0,
     byCategory: { body: 0, mind: 0, create: 0, order: 0 },
   },
   creature: { seed: 1, history: [] },
   tasks: [],
+  daily: null,
+  inventory: [],
+}
+
+function updateCard(state: GameState, index: number, patch: Partial<Daily['cards'][number]>): GameState {
+  if (!state.daily?.cards[index]) return state
+  return {
+    ...state,
+    daily: {
+      ...state.daily,
+      cards: state.daily.cards.map((c, i) => (i === index ? { ...c, ...patch } : c)),
+    },
+  }
 }
 
 export function reducer(state: GameState, action: Action): GameState {
@@ -56,6 +76,7 @@ export function reducer(state: GameState, action: Action): GameState {
       const r = REWARDS[task.size]
       const p = state.player
       const player = {
+        ...p,
         xp: Math.max(0, p.xp + sign * r.xp),
         coins: Math.max(0, p.coins + sign * r.coins),
         tasksDone: Math.max(0, p.tasksDone + sign),
@@ -89,5 +110,46 @@ export function reducer(state: GameState, action: Action): GameState {
 
     case 'restore':
       return action.state
+
+    case 'setDaily':
+      return { ...state, daily: action.daily }
+
+    case 'revealCard':
+      return updateCard(state, action.index, { revealed: true })
+
+    case 'rerollCard': {
+      // One free reroll a day; the card keeps its rarity so rerolls can't fish for legendaries.
+      const card = state.daily?.cards[action.index]
+      if (!state.daily || !card || card.done || state.daily.rerollUsed) return state
+      const next = updateCard(state, action.index, { challengeId: action.challengeId, revealed: true })
+      return { ...next, daily: { ...next.daily!, rerollUsed: true } }
+    }
+
+    case 'completeCard': {
+      const card = state.daily?.cards[action.index]
+      const challenge = card && getChallenge(card.challengeId)
+      if (!state.daily || !card || !challenge || card.done) return state
+      const r = cardReward(card)
+      const itemId = card.rarity === 'legendary' ? action.itemId : undefined
+      let next = updateCard(state, action.index, { done: true, revealed: true, itemId })
+      const allDone = next.daily!.cards.every((c) => c.done)
+      const bonus = allDone && !next.daily!.bonusClaimed
+      const p = state.player
+      const player = {
+        ...p,
+        xp: p.xp + r.xp + (bonus ? ALL_DONE_BONUS.xp : 0),
+        coins: p.coins + r.coins + (bonus ? ALL_DONE_BONUS.coins : 0),
+        cardsDone: p.cardsDone + 1,
+        byCategory: { ...p.byCategory, [challenge.category]: p.byCategory[challenge.category] + 1 },
+      }
+      next = {
+        ...next,
+        player,
+        creature: advanceCreature(state.creature, player, action.now, challenge.category),
+        inventory: itemId ? [...state.inventory, itemId] : state.inventory,
+        daily: { ...next.daily!, bonusClaimed: next.daily!.bonusClaimed || bonus },
+      }
+      return next
+    }
   }
 }

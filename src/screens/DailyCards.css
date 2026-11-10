@@ -1,0 +1,194 @@
+.cards-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+.cards-status p {
+  font-size: 14px;
+}
+
+.cards-dots {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.cards-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-3);
+  transition: background-color var(--dur), border-color var(--dur);
+}
+
+.cards-dots span.on {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+}
+
+.cards-grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* The flipping card */
+.flip {
+  --rc: var(--rarity-common);
+  height: 176px;
+  perspective: 1000px;
+  animation: deal 500ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * 90ms);
+}
+.flip.rarity-rare {
+  --rc: var(--rarity-rare);
+}
+.flip.rarity-legendary {
+  --rc: var(--rarity-legendary);
+}
+
+.flip-inner {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 700ms var(--ease-out);
+}
+
+.is-revealed .flip-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-l);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-back {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-2);
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 50% 40%, rgb(79 209 197 / 0.12), transparent 60%),
+    linear-gradient(160deg, var(--surface-2), var(--surface));
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast);
+}
+.flip-back:active {
+  transform: scale(0.98);
+}
+@media (hover: hover) {
+  .flip-back:hover {
+    border-color: var(--text-3);
+  }
+}
+
+.back-pattern {
+  width: 84px;
+  height: 84px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  opacity: 0.7;
+  animation: back-glow 3s ease-in-out infinite;
+}
+.back-pattern circle {
+  fill: var(--accent);
+  stroke: none;
+}
+
+.back-hint {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.flip-front {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--rc) 55%, var(--border));
+}
+.rarity-legendary .flip-front {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(167 139 250 / 0.18), transparent 60%),
+    var(--surface);
+  box-shadow: 0 0 28px rgb(167 139 250 / 0.3);
+}
+.rarity-rare .flip-front {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(91 141 239 / 0.12), transparent 60%),
+    var(--surface);
+}
+
+.front-top,
+.front-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.front-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-text);
+}
+
+.front-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.front-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.front-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-align: right;
+}
+
+.is-done .flip-front {
+  opacity: 0.75;
+}
+.is-done .front-text {
+  color: var(--text-2);
+}
+
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-2deg);
+  }
+}
+
+@keyframes back-glow {
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px var(--accent));
+  }
+}

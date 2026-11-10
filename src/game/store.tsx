@@ -9,10 +9,12 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { ALL_DONE_BONUS, cardReward, drawDaily, pickChallenge } from './cards'
 import { currentForm } from './creature'
-import { doneMessage, levelUpMessage } from './messages'
-import { initialState, reducer, type NewTask } from './reducer'
-import { REWARDS, levelFromXp } from './rules'
+import { getItem, pickLegendaryItem } from './items'
+import { cardDoneMessage, doneMessage, levelUpMessage } from './messages'
+import { initialState, reducer, type Action, type NewTask } from './reducer'
+import { REWARDS, dayKey, levelFromXp } from './rules'
 import { loadState, saveState } from './storage'
 import type { Category, GameState, Stage } from './types'
 
@@ -33,6 +35,9 @@ type Game = {
   completeTask: (id: string) => void
   uncompleteTask: (id: string) => void
   deleteTask: (id: string) => void
+  revealCard: (index: number) => void
+  rerollCard: (index: number) => void
+  completeCard: (index: number) => void
   toast: Toast | null
   dismissToast: () => void
   sheetOpen: boolean
@@ -69,6 +74,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  // New cards each game day (5 am), checked on start, every minute and when the app comes back.
+  useEffect(() => {
+    if (!ready) return
+    const check = () => {
+      const today = dayKey()
+      if (stateRef.current.daily?.day !== today) {
+        dispatch({ type: 'setDaily', daily: drawDaily(today, Math.random) })
+      }
+    }
+    check()
+    const t = setInterval(check, 60_000)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      clearInterval(t)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [ready])
+
   // Save after every change, once the saved state has been loaded.
   useEffect(() => {
     if (ready) saveState(state).catch(() => {})
@@ -89,28 +112,83 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setToast(null)
   }, [])
 
-  const completeTask = useCallback(
-    (id: string) => {
+  /** Applies a rewarding action, then reacts: creature pulse, evolution screen, toast. */
+  const reward = useCallback(
+    (
+      action: Action,
+      message: (after: GameState) => { text: string; important?: boolean },
+      tone: Toast['tone'] = 'accent',
+    ) => {
       const before = stateRef.current
-      const task = before.tasks.find((t) => t.id === id)
-      if (!task) return
-      const action = { type: 'complete', id, now: new Date() } as const
       const after = reducer(before, action)
+      if (after === before) return
       dispatch(action)
       setPulse((n) => n + 1)
       const from = currentForm(before.creature)
       const to = currentForm(after.creature)
       if (to.stage > from.stage) setEvolution({ from, to })
-      const r = REWARDS[task.size]
       const oldLevel = levelFromXp(before.player.xp).level
-      const newLevel = levelFromXp(before.player.xp + r.xp).level
+      const newLevel = levelFromXp(after.player.xp).level
+      const m = message(after)
       show(
-        newLevel > oldLevel
+        newLevel > oldLevel && !m.important
           ? { text: levelUpMessage(newLevel), tone: 'gold', undo: () => restoreTo(before) }
-          : { text: doneMessage(r.xp, r.coins), tone: 'accent', undo: () => restoreTo(before) },
+          : { text: m.text, tone: m.important ? 'gold' : tone, undo: () => restoreTo(before) },
       )
     },
     [show, restoreTo],
+  )
+
+  const completeTask = useCallback(
+    (id: string) => {
+      const task = stateRef.current.tasks.find((t) => t.id === id)
+      if (!task) return
+      const r = REWARDS[task.size]
+      reward({ type: 'complete', id, now: new Date() }, () => ({ text: doneMessage(r.xp, r.coins) }))
+    },
+    [reward],
+  )
+
+  const revealCard = useCallback((index: number) => {
+    dispatch({ type: 'revealCard', index })
+  }, [])
+
+  const rerollCard = useCallback((index: number) => {
+    const daily = stateRef.current.daily
+    if (!daily) return
+    const challengeId = pickChallenge(
+      Math.random,
+      daily.cards.map((c) => c.challengeId),
+    )
+    dispatch({ type: 'rerollCard', index, challengeId })
+    setToast(null)
+  }, [])
+
+  const completeCard = useCallback(
+    (index: number) => {
+      const before = stateRef.current
+      const card = before.daily?.cards[index]
+      if (!card) return
+      const itemId =
+        card.rarity === 'legendary' ? pickLegendaryItem(before.inventory, Math.random) : undefined
+      const r = cardReward(card)
+      reward(
+        { type: 'completeCard', index, now: new Date(), itemId },
+        (after) => {
+          const bonus = !before.daily?.bonusClaimed && after.daily?.bonusClaimed
+          if (itemId)
+            return { text: `Carte légendaire. Tu trouves\u00a0: ${getItem(itemId)?.name}.`, important: true }
+          if (bonus)
+            return {
+              text: `Les trois cartes. Bonus\u00a0: +${ALL_DONE_BONUS.xp} XP et ${ALL_DONE_BONUS.coins} pièces.`,
+              important: true,
+            }
+          return { text: cardDoneMessage(r.xp) }
+        },
+        card.rarity === 'common' ? 'accent' : 'gold',
+      )
+    },
+    [reward],
   )
 
   const uncompleteTask = useCallback((id: string) => {
@@ -135,6 +213,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       completeTask,
       uncompleteTask,
       deleteTask,
+      revealCard,
+      rerollCard,
+      completeCard,
       toast,
       dismissToast: () => setToast(null),
       sheetOpen,
@@ -144,7 +225,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
       evolution,
       dismissEvolution: () => setEvolution(null),
     }),
-    [state, ready, addTask, completeTask, uncompleteTask, deleteTask, toast, sheetOpen, pulse, evolution],
+    [
+      state,
+      ready,
+      addTask,
+      completeTask,
+      uncompleteTask,
+      deleteTask,
+      revealCard,
+      rerollCard,
+      completeCard,
+      toast,
+      sheetOpen,
+      pulse,
+      evolution,
+    ],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

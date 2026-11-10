@@ -14,6 +14,12 @@ const levelUp = [
   'Niveau {level}. La lumière gagne du terrain.',
 ]
 
+const cardDone = [
+  'Défi relevé. +{xp} XP.',
+  'Carte validée. Ton compagnon approuve d’un clignement.',
+  'Une carte de moins, {xp} XP de plus.',
+]
+
 function pick(list: string[], vars: Record<string, number>) {
   const line = list[Math.floor(Math.random() * list.length)]
   return line.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''))
@@ -21,3 +27,4 @@ function pick(list: string[], vars: Record<string, number>) {
 
 export const doneMessage = (xp: number, coins: number) => pick(done, { xp, coins })
 export const levelUpMessage = (level: number) => pick(levelUp, { level })
+export const cardDoneMessage = (xp: number) => pick(cardDone, { xp })

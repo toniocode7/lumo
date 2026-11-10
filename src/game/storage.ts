@@ -51,6 +51,8 @@ export function normalize(raw: unknown): GameState {
     player,
     creature,
     tasks: Array.isArray(s.tasks) ? s.tasks : [],
+    daily: s.daily ?? null,
+    inventory: Array.isArray(s.inventory) ? s.inventory : [],
   }
 }
 
