@@ -9,6 +9,10 @@ import { CHALLENGES, getChallenge } from './challenges'
 import { ITEMS, getItem, pickLegendaryItem } from './items'
 import { computeLoot, progress, remainingMs } from './expedition'
 import { addDays, streakInfo, weekOf } from './streak'
+import { BOND_PER_TASK, BOND_TAPS_PER_DAY, bondLevel, unlockedReactions } from './bond'
+import { rollChest } from './chests'
+import { spawnShadow } from './shadow'
+import { greetLine } from './lines'
 import type { GameState, Rarity } from './types'
 
 const monday9am = new Date(2026, 10, 9, 9, 0) // Mon 9 Nov 2026
@@ -425,5 +429,104 @@ describe('save files and first launch', () => {
     expect(normalize({}).onboarded).toBe(false)
     expect(normalize({ player: { xp: 40 } }).onboarded).toBe(true)
     expect(reducer(initialState, { type: 'finishOnboarding' }).onboarded).toBe(true)
+  })
+})
+
+describe('bond, chests and the weekly Shadow', () => {
+  const doTasks = (s: GameState, n: number, size: 's' | 'm' | 'l' = 's', from = 0) => {
+    for (let i = from; i < from + n; i++) {
+      s = reducer(s, { type: 'add', id: `t${i}`, now: monday9am, task: { title: `T${i}`, size, category: 'mind', repeat: 'once' } })
+      s = reducer(s, { type: 'complete', id: `t${i}`, now: monday9am })
+    }
+    return s
+  }
+  const withShadow = (hp = 100): GameState => ({
+    ...initialState,
+    shadow: { week: '2026-11-09', name: 'la Brume du Lundi', hue: 0, maxHp: hp, hp, defeated: false },
+  })
+
+  it('takes XP as damage and heals it back when a task is unchecked', () => {
+    let s = doTasks(withShadow(), 1, 'm')
+    expect(s.shadow!.hp).toBe(75)
+    s = reducer(s, { type: 'uncomplete', id: 't0', now: monday9am })
+    expect(s.shadow!.hp).toBe(100)
+  })
+
+  it('drops one legendary chest when the Shadow is defeated, and stays defeated', () => {
+    let s = doTasks(withShadow(60), 2, 'l')
+    expect(s.shadow).toMatchObject({ hp: 0, defeated: true })
+    expect(s.chests.filter((c) => c.source === 'shadow')).toHaveLength(1)
+    s = reducer(s, { type: 'uncomplete', id: 't1', now: monday9am })
+    expect(s.shadow!.defeated).toBe(true)
+    s = reducer(s, { type: 'complete', id: 't1', now: monday9am })
+    expect(s.chests.filter((c) => c.source === 'shadow')).toHaveLength(1)
+  })
+
+  it('gives a chest every 5 tasks, without farming by check / uncheck', () => {
+    let s = doTasks(initialState, 5)
+    const taskChests = (x: GameState) => x.chests.filter((c) => c.source === 'tasks')
+    expect(taskChests(s)).toHaveLength(1)
+    s = reducer(s, { type: 'uncomplete', id: 't4', now: monday9am })
+    s = reducer(s, { type: 'complete', id: 't4', now: monday9am })
+    expect(taskChests(s)).toHaveLength(1)
+    s = doTasks(s, 5, 's', 5)
+    expect(taskChests(s)).toHaveLength(2)
+  })
+
+  it('gives a chest per level reached, rare every fifth level', () => {
+    const s = doTasks(initialState, 12, 'l') // 600 XP: from level 1 to 5
+    const levelChests = s.chests.filter((c) => c.source === 'level')
+    expect(levelChests.map((c) => c.rarity)).toEqual(['common', 'common', 'common', 'rare'])
+  })
+
+  it('opens a chest once and applies its rewards', () => {
+    let s = doTasks(initialState, 5)
+    const id = s.chests.find((c) => c.source === 'tasks')!.id
+    const xp = s.player.xp
+    s = reducer(s, { type: 'openChest', id, now: monday9am, rewards: { coins: 30, xp: 10, itemId: 'glow-moss' } })
+    expect(s.chests.some((c) => c.id === id)).toBe(false)
+    expect(s.player.xp).toBe(xp + 10)
+    expect(s.inventory).toContain('glow-moss')
+    expect(reducer(s, { type: 'openChest', id, now: monday9am, rewards: { coins: 30, xp: 10 } })).toBe(s)
+  })
+
+  it('rolls chest rewards in range, legendary chests always holding a legendary item', () => {
+    const c = rollChest('common', [], () => 0.99)
+    expect(c.coins).toBeGreaterThanOrEqual(20)
+    expect(c.coins).toBeLessThanOrEqual(40)
+    expect(c.itemId).toBeUndefined()
+    const l = rollChest('legendary', [], () => 0.5)
+    expect(getItem(l.itemId!)!.source).toBe('legendary')
+  })
+
+  it('grows the bond with tasks and a few taps a day', () => {
+    let s = doTasks(initialState, 2)
+    expect(s.bond.points).toBe(2 * BOND_PER_TASK)
+    for (let i = 0; i < 9; i++) s = reducer(s, { type: 'pet', now: monday9am })
+    expect(s.bond.points).toBe(2 * BOND_PER_TASK + BOND_TAPS_PER_DAY)
+    s = reducer(s, { type: 'pet', now: new Date(2026, 10, 10, 9) })
+    expect(s.bond.points).toBe(2 * BOND_PER_TASK + BOND_TAPS_PER_DAY + 1)
+    expect(bondLevel(0).name).toBe('Curieux')
+    expect(bondLevel(45)).toMatchObject({ level: 3, name: 'Complice' })
+    expect(unlockedReactions(3)).toEqual(['hop', 'spin', 'hum'])
+  })
+
+  it('spawns a Shadow that scales with level', () => {
+    const sh = spawnShadow('2026-11-09', 10, () => 0)
+    expect(sh).toMatchObject({ maxHp: 650, hp: 650, defeated: false, name: 'la Brume du Lundi' })
+  })
+
+  it('does not pay old saves chests for past progress', () => {
+    const s = normalize({ player: { xp: 600, tasksDone: 12 } })
+    expect(s.milestones).toMatchObject({ tasks: 12, level: 5 })
+    expect(s.chests).toEqual([])
+  })
+})
+
+describe('creature lines', () => {
+  it('greets according to the time of day', () => {
+    const night = ['Il est tard, non ?', 'Chut. Les étoiles travaillent.', 'Une dernière, et au lit.']
+    for (const h of [0, 3, 4, 22, 23]) expect(night).toContain(greetLine(h))
+    for (const h of [6, 12, 16, 20]) expect(night).not.toContain(greetLine(h))
   })
 })

@@ -1,0 +1,145 @@
+.living {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
+
+.living-btn {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.react {
+  display: block;
+  transform-origin: 50% 70%;
+}
+
+.react-hop {
+  animation: react-hop 600ms var(--ease-out);
+}
+.react-spin {
+  animation: react-spin 800ms var(--ease-out);
+}
+.react-hum {
+  animation: react-hum 900ms ease-in-out;
+}
+.react-flare {
+  animation: react-flare 800ms var(--ease-out);
+}
+.react-constellation {
+  animation: react-float 1400ms var(--ease-out);
+}
+.react-knock {
+  animation: react-knock 400ms ease-in-out;
+}
+
+/* Speech bubble */
+.bubble {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% - 18px);
+  left: 50%;
+  width: max-content;
+  max-width: min(260px, 80vw);
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: bubble-in 320ms var(--ease-out);
+  pointer-events: none;
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.92);
+  }
+}
+
+@keyframes react-hop {
+  30% {
+    transform: translateY(-22px) scale(1.05, 0.95);
+  }
+  55% {
+    transform: translateY(0) scale(1.08, 0.9);
+  }
+  75% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes react-spin {
+  40% {
+    transform: translateY(-10px) rotate(200deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes react-hum {
+  20% {
+    transform: rotate(-8deg);
+  }
+  40% {
+    transform: rotate(8deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes react-flare {
+  30% {
+    transform: scale(1.18);
+    filter: brightness(1.6) drop-shadow(0 0 18px rgb(255 255 255 / 0.6));
+  }
+}
+
+@keyframes react-float {
+  40% {
+    transform: translateY(-16px) scale(1.06);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes react-knock {
+  25% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}

@@ -15,6 +15,8 @@ type Props = {
   /** Change this value to play a short glow pulse (e.g. after a task). */
   pulseKey?: number
   label?: string
+  /** Where the creature looks, from -1 to 1 on each axis (follows the finger on the home screen). */
+  look?: { x: number; y: number }
 }
 
 // Everything is drawn around the centre of a 200 x 200 box.
@@ -315,6 +317,7 @@ export function Creature({
   size = 180,
   pulseKey,
   label,
+  look,
 }: Props) {
   const uid = useId().replace(/:/g, '')
   const ids = { glow: `g${uid}`, body: `b${uid}`, egg: `e${uid}` }
@@ -367,7 +370,16 @@ export function Creature({
               {core.facets.map(([x, y], i) => (
                 <line key={i} x1={C} y1={C} x2={x} y2={y} stroke="#fff" strokeOpacity={0.22} strokeWidth={1.2} />
               ))}
-              <Eyes y={core.eyeY} gap={r * 0.32} size={r * 0.15} mood={mood} />
+              <g
+                className="cr-eyes"
+                style={
+                  look && mood !== 'sleep'
+                    ? { transform: `translate(${(look.x * r * 0.14).toFixed(2)}px, ${(look.y * r * 0.1).toFixed(2)}px)` }
+                    : undefined
+                }
+              >
+                <Eyes y={core.eyeY} gap={r * 0.32} size={r * 0.15} mood={mood} />
+              </g>
             </g>
           </g>
         )}

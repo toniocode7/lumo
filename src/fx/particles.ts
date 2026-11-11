@@ -13,6 +13,7 @@ type Particle = {
   spin: number
   angle: number
   shape: 'dot' | 'diamond'
+  gravity: number
 }
 
 let canvas: HTMLCanvasElement | null = null
@@ -48,7 +49,7 @@ function frame(now: number) {
   g.clearRect(0, 0, innerWidth, innerHeight)
   parts = parts.filter((p) => (p.life -= dt) > 0)
   for (const p of parts) {
-    p.vy += 520 * dt // gravity
+    p.vy += p.gravity * dt
     p.vx *= 0.985
     p.x += p.vx * dt
     p.y += p.vy * dt
@@ -106,6 +107,36 @@ export function burst(
       spin: (Math.random() - 0.5) * 12,
       angle: Math.random() * Math.PI,
       shape: Math.random() < 0.55 ? 'diamond' : 'dot',
+      gravity: 520,
+    })
+  }
+  if (!running) {
+    running = true
+    last = performance.now()
+    requestAnimationFrame(frame)
+  }
+}
+
+/** Stars appearing in a circle and drifting gently outward. */
+export function ring(x: number, y: number, colors: string[], radius = 80, count = 14) {
+  if (reducedMotion()) return
+  ensureCanvas()
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2
+    const max = 1.1 + Math.random() * 0.5
+    parts.push({
+      x: x + Math.cos(a) * radius,
+      y: y + Math.sin(a) * radius,
+      vx: Math.cos(a) * 30,
+      vy: Math.sin(a) * 30 - 20,
+      life: max,
+      max,
+      size: 5 + Math.random() * 3,
+      color: colors[i % colors.length],
+      spin: 2,
+      angle: 0,
+      shape: 'diamond',
+      gravity: 0,
     })
   }
   if (!running) {

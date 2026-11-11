@@ -112,6 +112,41 @@ export const sfx = {
   loot() {
     ;[1568, 1976, 2349, 2637, 3136].forEach((f, i) => tone(f, i * 0.06, 0.18, 'sine', 0.25))
   },
+  // Creature reactions
+  boop() {
+    tone(520, 0, 0.12, 'sine', 0.4, 880)
+  },
+  twirl() {
+    tone(660, 0, 0.25, 'triangle', 0.3, 1320)
+    whoosh(0, 0.25, 800, 2600, 0.15)
+  },
+  hum() {
+    ;[G5, E5, G5, C6].forEach((f, i) => tone(f, i * 0.14, 0.18, 'sine', 0.3))
+  },
+  flare() {
+    tone(330, 0, 0.5, 'sine', 0.25, 660)
+    tone(990, 0.1, 0.4, 'triangle', 0.18)
+  },
+  chime() {
+    ;[C6, 1318.5, 1568, 2093].forEach((f, i) => tone(f, i * 0.07, 0.5, 'sine', 0.18))
+  },
+  knock() {
+    tone(180, 0, 0.08, 'triangle', 0.5, 120)
+  },
+  // Chests
+  chestTap() {
+    tone(220, 0, 0.1, 'square', 0.12, 160)
+    whoosh(0, 0.12, 2000, 900, 0.2)
+  },
+  chestOpen() {
+    whoosh(0, 0.4, 400, 3000, 0.3)
+    ;[C5, E5, G5, C6, 1318.5].forEach((f, i) => tone(f, 0.05 + i * 0.06, 0.45, 'triangle', 0.3))
+  },
+  // Shadow
+  shadowHit() {
+    tone(140, 0, 0.18, 'sawtooth', 0.12, 90)
+    whoosh(0, 0.2, 1200, 300, 0.2)
+  },
   evolveCharge() {
     whoosh(0, 1.3, 200, 3000, 0.35)
     tone(220, 0, 1.3, 'sine', 0.2, 440)

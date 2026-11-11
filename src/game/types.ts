@@ -68,6 +68,31 @@ export interface Nest {
   slots: (string | null)[]
 }
 
+export type ChestRarity = 'common' | 'rare' | 'legendary'
+
+export interface Chest {
+  id: string
+  rarity: ChestRarity
+  source: 'tasks' | 'level' | 'shadow'
+}
+
+export interface Shadow {
+  week: string // Monday (game day) of the week it belongs to
+  name: string
+  /** Small tint shift so each week's Shadow looks a little different. */
+  hue: number
+  maxHp: number
+  hp: number
+  defeated: boolean
+}
+
+export interface Bond {
+  points: number
+  /** Game day of the last counted tap, and how many taps counted that day. */
+  day: string
+  taps: number
+}
+
 export interface GameState {
   version: 1
   player: Player
@@ -82,4 +107,10 @@ export interface GameState {
   nest: Nest
   /** The welcome screens have been seen. */
   onboarded: boolean
+  bond: Bond
+  /** Unopened chests, oldest first. */
+  chests: Chest[]
+  shadow: Shadow | null
+  /** Highest task count and level already rewarded with a chest (stops check/uncheck farming). */
+  milestones: { tasks: number; level: number; chestSeq: number }
 }

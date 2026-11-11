@@ -1,0 +1,105 @@
+.shadow-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  border-radius: var(--radius-l);
+  border: 1px solid color-mix(in srgb, #c86bd9 30%, var(--border));
+  background:
+    radial-gradient(80% 120% at 0% 50%, rgb(200 107 217 / 0.12), transparent 70%),
+    var(--surface);
+}
+
+.shadow-card.is-defeated {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.shadow-info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.shadow-info strong {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.shadow-info p {
+  font-size: 13px;
+}
+
+.shadow-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c86bd9;
+}
+
+.is-defeated .shadow-kicker {
+  color: var(--accent-text);
+}
+
+.shadow-art {
+  flex: none;
+  overflow: visible;
+}
+
+.shadow-art .shadow-body {
+  transform-origin: 50px 55px;
+  transition: transform 600ms var(--ease-out);
+}
+
+.shadow-art .shadow-wisps {
+  transform-origin: 50px 70px;
+  animation: wisp 3.5s ease-in-out infinite;
+}
+
+.shadow-art .shadow-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: shadow-blink 5s infinite;
+}
+
+.shadow-art.is-hit {
+  animation: shadow-hit 500ms var(--ease-out);
+}
+
+.shadow-art.is-gone {
+  opacity: 0.25;
+  filter: grayscale(1) !important;
+}
+
+@keyframes wisp {
+  50% {
+    transform: skewX(6deg) translateY(2px);
+  }
+}
+
+@keyframes shadow-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.15);
+  }
+}
+
+@keyframes shadow-hit {
+  20% {
+    transform: translateX(-6px) scale(0.92);
+    filter: brightness(2) saturate(0.4);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}

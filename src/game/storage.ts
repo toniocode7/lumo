@@ -1,5 +1,6 @@
 import { advanceCreature, newSeed } from './creature'
 import { autoPlace, initialState } from './reducer'
+import { levelFromXp } from './rules'
 import { activityFromHistory } from './streak'
 import type { GameState } from './types'
 
@@ -59,6 +60,15 @@ export function normalize(raw: unknown): GameState {
     nest: s.nest?.slots ? s.nest : initialState.nest,
     // Players who already had progress before the welcome screens existed skip them.
     onboarded: s.onboarded ?? (player.xp > 0 || (Array.isArray(s.tasks) && s.tasks.length > 0)),
+    bond: s.bond ?? initialState.bond,
+    chests: Array.isArray(s.chests) ? s.chests : [],
+    shadow: s.shadow ?? null,
+    // Past progress doesn't pay out chests retroactively: count from where the player is.
+    milestones: s.milestones ?? {
+      tasks: player.tasksDone,
+      level: levelFromXp(player.xp).level,
+      chestSeq: 0,
+    },
   }
   // Items found before the nest existed get placed in it.
   if (!s.nest?.slots) for (const id of state.inventory) Object.assign(state, autoPlace(state, id))

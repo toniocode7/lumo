@@ -1,6 +1,12 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { Creature, type Mood } from '../components/Creature'
+import { type Mood } from '../components/Creature'
+import { LivingCreature } from '../components/LivingCreature'
+import { ChestOverlay } from '../components/ChestOverlay'
+import { ShadowCard } from '../components/ShadowCard'
+import { bondLevel } from '../game/bond'
+import { CHEST_LABEL } from '../game/chests'
 import { NestScene } from '../components/NestScene'
 import { HATCH_AFTER_TASKS, currentForm, formName } from '../game/creature'
 import { TaskRow } from '../components/TaskRow'
@@ -26,7 +32,10 @@ function eggCaption(tasksDone: number) {
 }
 
 export function Home() {
-  const { state, openSheet, pulse, streak } = useGame()
+  const { state, openSheet, streak } = useGame()
+  const [chestsOpen, setChestsOpen] = useState(false)
+  const bond = bondLevel(state.bond.points)
+  const chests = state.chests
   const form = currentForm(state.creature)
   const { level, xpInLevel, xpToNext } = levelFromXp(state.player.xp)
   const { todo, done } = todaysTasks(state)
@@ -81,16 +90,7 @@ export function Home() {
               </span>
             </Link>
           ) : (
-            <Creature
-              stage={form.stage}
-              branch={form.branch}
-              seed={state.creature.seed}
-              eggProgress={state.player.tasksDone}
-              mood={mood}
-              pulseKey={pulse}
-              size={180}
-              label={name}
-            />
+            <LivingCreature mood={mood} size={180} />
           )}
         </NestScene>
         <div className="nest-ground" />
@@ -107,8 +107,33 @@ export function Home() {
               ? eggCaption(state.player.tasksDone)
               : caption(todo.length, done.length)}
           </p>
+          {form.stage > 0 && (
+            <p className="bond" aria-label={`Lien : ${bond.name}`}>
+              <Icon name="heart" size={14} />
+              <span>{bond.name}</span>
+              <span className="bond-track">
+                <span className="bond-fill" style={{ width: `${Math.round(bond.progress * 100)}%` }} />
+              </span>
+            </p>
+          )}
         </div>
       </div>
+
+      {chests.length > 0 && (
+        <button className={`chest-banner rarity-${chests[0].rarity}`} onClick={() => setChestsOpen(true)}>
+          <span className="chest-banner-icon">
+            <Icon name="chest" size={22} />
+          </span>
+          <span>
+            <strong>
+              {chests.length === 1 ? CHEST_LABEL[chests[0].rarity] : `${chests.length} coffres`} à ouvrir
+            </strong>
+            <small>Touche pour l’ouvrir</small>
+          </span>
+          <Icon name="chevron" size={18} />
+        </button>
+      )}
+      {chestsOpen && <ChestOverlay onClose={() => setChestsOpen(false)} />}
 
       <Card className="level-card">
         <div className="level-head">
@@ -121,6 +146,8 @@ export function Home() {
         </div>
         <ProgressBar value={xpInLevel} max={xpToNext} cycle={level} label="Progression du niveau" />
       </Card>
+
+      <ShadowCard />
 
       {streak.atRisk && (
         <div className="streak-note" role="status">
