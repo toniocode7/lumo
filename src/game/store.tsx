@@ -17,7 +17,9 @@ import { cardDoneMessage, doneMessage, levelUpMessage } from './messages'
 import { initialState, reducer, type Action, type NewTask } from './reducer'
 import { REWARDS, dayKey, levelFromXp } from './rules'
 import { loadState, requestPersistentStorage, saveState } from './storage'
-import { streakInfo, type StreakInfo } from './streak'
+import { streakInfo, weekOf, type StreakInfo } from './streak'
+import { capitalize, spawnShadow } from './shadow'
+import { CHEST_LABEL, rollChest, type ChestRewards } from './chests'
 import { sfx } from '../fx/sound'
 import type { Category, GameState, Stage } from './types'
 
@@ -51,6 +53,10 @@ type Game = {
   placeItem: (slot: number, itemId: string | null) => void
   setBackdrop: (itemId: string) => void
   finishOnboarding: () => void
+  /** Tap on the creature. */
+  pet: () => void
+  /** Opens a chest and returns what was inside. */
+  openChest: (id: string) => ChestRewards | null
   importState: (s: GameState) => void
   toast: Toast | null
   dismissToast: () => void
@@ -95,8 +101,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (!ready) return
     const check = () => {
       const today = dayKey()
-      if (stateRef.current.daily?.day !== today) {
+      const s = stateRef.current
+      if (s.daily?.day !== today) {
         dispatch({ type: 'setDaily', daily: drawDaily(today, Math.random) })
+      }
+      // A new Shadow every Monday; last week's leaves quietly, beaten or not.
+      const week = weekOf(today)
+      if (s.shadow?.week !== week) {
+        dispatch({ type: 'setShadow', shadow: spawnShadow(week, levelFromXp(s.player.xp).level, Math.random) })
       }
     }
     check()
@@ -149,14 +161,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const today = dayKey()
       const woke =
         streakInfo(before.activeDays, today).sleeping && !streakInfo(after.activeDays, today).sleeping
-      const m = woke
-        ? { text: 'Ton compagnon se réveille, la brume se lève. Content de te revoir.', important: true }
-        : message(after)
+      const newChests = after.chests.length - before.chests.length
+      const beatShadow = !before.shadow?.defeated && after.shadow?.defeated
+      const m = beatShadow
+        ? {
+            text: `${capitalize(after.shadow!.name)} se dissipe\u00a0! Un coffre d’aurore t’attend.`,
+            important: true,
+          }
+        : woke
+          ? { text: 'Ton compagnon se réveille, la brume se lève. Content de te revoir.', important: true }
+          : newChests > 0 && newLevel === oldLevel
+            ? {
+                text: `${CHEST_LABEL[after.chests[after.chests.length - 1].rarity]} gagné. Ouvre-le depuis l’accueil.`,
+                important: true,
+              }
+            : message(after)
       if (newLevel > oldLevel) sfx.levelUp()
       else sfx[sound]()
       show(
         newLevel > oldLevel && !m.important
-          ? { text: levelUpMessage(newLevel), tone: 'gold', undo: () => restoreTo(before) }
+          ? {
+              text: `${levelUpMessage(newLevel)} Un coffre t’attend.`,
+              tone: 'gold',
+              undo: () => restoreTo(before),
+            }
           : { text: m.text, tone: m.important ? 'gold' : tone, undo: () => restoreTo(before) },
       )
     },
@@ -290,6 +318,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'setBackdrop', itemId })
   }, [])
 
+  const pet = useCallback(() => dispatch({ type: 'pet', now: new Date() }), [])
+
+  const openChest = useCallback((id: string) => {
+    const before = stateRef.current
+    const chest = before.chests.find((c) => c.id === id)
+    if (!chest) return null
+    const rewards = rollChest(chest.rarity, before.inventory, Math.random)
+    const action = { type: 'openChest', id, rewards, now: new Date() } as const
+    const after = reducer(before, action)
+    dispatch(action)
+    const from = currentForm(before.creature)
+    const to = currentForm(after.creature)
+    if (to.stage > from.stage) setEvolution({ from, to })
+    return rewards
+  }, [])
+
   const finishOnboarding = useCallback(() => dispatch({ type: 'finishOnboarding' }), [])
 
   const importState = useCallback(
@@ -323,6 +367,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setBackdrop,
       finishOnboarding,
       importState,
+      pet,
+      openChest,
       toast,
       dismissToast: () => setToast(null),
       sheetOpen,
@@ -351,6 +397,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setBackdrop,
       finishOnboarding,
       importState,
+      pet,
+      openChest,
       toast,
       sheetOpen,
       pulse,

@@ -2,10 +2,13 @@ import { ALL_DONE_BONUS, cardReward } from './cards'
 import { getChallenge } from './challenges'
 import { advanceCreature } from './creature'
 import type { Duration, Loot } from './expedition'
-import { REWARDS, dayKey } from './rules'
+import { REWARDS, dayKey, levelFromXp } from './rules'
 import { hadActivity } from './streak'
 import { DEFAULT_BACKDROP, getItem } from './items'
-import type { Category, Daily, GameState, Repeat, Size } from './types'
+import { BOND_PER_TASK, BOND_TAPS_PER_DAY } from './bond'
+import { LEVEL_RARE_CHEST_EVERY, TASK_CHEST_EVERY, TASK_RARE_CHEST_EVERY, type ChestRewards } from './chests'
+import { hitShadow } from './shadow'
+import type { Category, Chest, Daily, GameState, Repeat, Shadow, Size } from './types'
 
 export type NewTask = { title: string; size: Size; category: Category; repeat: Repeat }
 
@@ -25,6 +28,9 @@ export type Action =
   | { type: 'placeItem'; slot: number; itemId: string | null }
   | { type: 'setBackdrop'; itemId: string }
   | { type: 'finishOnboarding' }
+  | { type: 'pet'; now: Date }
+  | { type: 'setShadow'; shadow: Shadow }
+  | { type: 'openChest'; id: string; rewards: ChestRewards; now: Date }
 
 export const initialState: GameState = {
   version: 1,
@@ -45,6 +51,10 @@ export const initialState: GameState = {
   inventory: [],
   nest: { backdrop: DEFAULT_BACKDROP, slots: [null, null, null, null] },
   onboarded: false,
+  bond: { points: 0, day: '', taps: 0 },
+  chests: [],
+  shadow: null,
+  milestones: { tasks: 0, level: 1, chestSeq: 0 },
 }
 
 export const NEST_SLOTS = 4
@@ -72,7 +82,51 @@ function updateCard(state: GameState, index: number, patch: Partial<Daily['cards
   }
 }
 
+/** Actions that can earn or take back XP; they also hit the Shadow and may give chests. */
+const PROGRESS_ACTIONS = new Set<Action['type']>(['complete', 'uncomplete', 'completeCard', 'finishExpedition', 'openChest'])
+
 export function reducer(state: GameState, action: Action): GameState {
+  const next = baseReducer(state, action)
+  if (next === state || !PROGRESS_ACTIONS.has(action.type)) return next
+  return withProgress(state, next)
+}
+
+/**
+ * Side effects of earning XP, in one place:
+ * the Shadow takes the XP as damage (or heals it back on an uncheck), each new task adds
+ * to the bond, and new milestones (5 tasks, a level, a defeated Shadow) drop chests.
+ */
+function withProgress(before: GameState, after: GameState): GameState {
+  const gained = after.player.xp - before.player.xp
+  const { shadow, defeatedNow } = hitShadow(after.shadow, gained)
+  let { tasks, level, chestSeq } = after.milestones
+  const chests: Chest[] = []
+  const drop = (rarity: Chest['rarity'], source: Chest['source']) =>
+    chests.push({ id: `c${++chestSeq}`, rarity, source })
+
+  const doneNow = after.player.tasksDone
+  while (tasks + 1 <= doneNow) {
+    tasks++
+    if (tasks % TASK_CHEST_EVERY === 0) drop(tasks % TASK_RARE_CHEST_EVERY === 0 ? 'rare' : 'common', 'tasks')
+  }
+  const levelNow = levelFromXp(after.player.xp).level
+  while (level + 1 <= levelNow) {
+    level++
+    drop(level % LEVEL_RARE_CHEST_EVERY === 0 ? 'rare' : 'common', 'level')
+  }
+  if (defeatedNow) drop('legendary', 'shadow')
+
+  const newTasks = Math.max(0, doneNow - before.player.tasksDone)
+  return {
+    ...after,
+    shadow,
+    chests: [...after.chests, ...chests],
+    milestones: { tasks, level, chestSeq },
+    bond: { ...after.bond, points: after.bond.points + newTasks * BOND_PER_TASK },
+  }
+}
+
+function baseReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'add': {
       const title = action.task.title.trim()
@@ -249,6 +303,37 @@ export function reducer(state: GameState, action: Action): GameState {
       // An item sits in one spot at a time: placing it again moves it.
       const slots = state.nest.slots.map((s, i) => (i === slot ? itemId : s === itemId ? null : s))
       return { ...state, nest: { ...state.nest, slots } }
+    }
+
+    case 'pet': {
+      // Taps always get a reaction; only the first few each day grow the bond.
+      const day = dayKey(action.now)
+      const taps = state.bond.day === day ? state.bond.taps : 0
+      if (taps >= BOND_TAPS_PER_DAY) return state
+      return { ...state, bond: { points: state.bond.points + 1, day, taps: taps + 1 } }
+    }
+
+    case 'setShadow':
+      return { ...state, shadow: action.shadow }
+
+    case 'openChest': {
+      if (!state.chests.some((c) => c.id === action.id)) return state
+      const { rewards } = action
+      const player = {
+        ...state.player,
+        xp: state.player.xp + rewards.xp,
+        coins: state.player.coins + rewards.coins,
+      }
+      return autoPlace(
+        {
+          ...state,
+          player,
+          chests: state.chests.filter((c) => c.id !== action.id),
+          creature: advanceCreature(state.creature, player, action.now),
+          inventory: rewards.itemId ? [...state.inventory, rewards.itemId] : state.inventory,
+        },
+        rewards.itemId,
+      )
     }
 
     case 'finishOnboarding':

@@ -491,3 +491,96 @@
   border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
   font-size: 14px;
 }
+
+/* Bond with the creature */
+.bond {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--coral-text);
+}
+.nest-stage:not(.backdrop-night) .bond {
+  color: #ffb3a8;
+}
+.bond-track {
+  width: 56px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgb(255 122 107 / 0.2);
+  overflow: hidden;
+}
+.bond-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--coral);
+  transition: width 600ms var(--ease-out);
+}
+
+/* Chest waiting to be opened */
+.chest-banner {
+  --glow: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-l);
+  border: 1px solid color-mix(in srgb, var(--glow) 55%, transparent);
+  background:
+    radial-gradient(80% 140% at 0% 50%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 70%),
+    var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  animation: chest-banner-in 500ms var(--ease-out);
+}
+.chest-banner.rarity-rare {
+  --glow: var(--rarity-rare);
+}
+.chest-banner.rarity-legendary {
+  --glow: var(--rarity-legendary);
+}
+.chest-banner > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+}
+.chest-banner small {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.chest-banner-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--glow) 20%, transparent);
+  color: var(--glow);
+  animation: chest-wiggle 2.6s ease-in-out infinite;
+}
+@keyframes chest-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+}
+@keyframes chest-wiggle {
+  0%,
+  80%,
+  100% {
+    transform: rotate(0);
+  }
+  85% {
+    transform: rotate(-10deg) scale(1.08);
+  }
+  90% {
+    transform: rotate(9deg) scale(1.08);
+  }
+  95% {
+    transform: rotate(-5deg);
+  }
+}

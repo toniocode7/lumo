@@ -5,6 +5,10 @@ Le cahier des charges complet est dans [BRIEF.md](BRIEF.md).
 
 - Tâches, cartes du jour, expéditions (minuteur de concentration), série avec joker
 - Créature dessinée en SVG : œuf, éclosion, 4 branches d'évolution
+- Créature vivante : elle suit ton doigt, réagit quand tu la touches, te parle,
+  et le lien avec elle débloque de nouvelles réactions
+- Coffres à ouvrir (toutes les 5 tâches, à chaque niveau, et contre l'Ombre)
+- L'Ombre de la semaine : un boss que chaque XP gagné fait reculer
 - Nid à décorer, boutique, objets à trouver
 - Sons et particules générés par le code, désactivables
 - Appli installable (PWA), fonctionne hors connexion, données sur l'appareil,
